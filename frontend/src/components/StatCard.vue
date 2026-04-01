@@ -22,18 +22,18 @@ const props = defineProps({
 })
 
 const textColor = computed(() => ({
-  blue:  'text-blue-600',
-  green: 'text-emerald-600',
-  amber: 'text-amber-600',
-  red:   'text-red-600',
-  gray:  'text-gray-600',
-}[props.color] || 'text-gray-900'))
+  blue:  'text-blue-600 dark:text-blue-400',
+  green: 'text-emerald-600 dark:text-emerald-400',
+  amber: 'text-amber-600 dark:text-amber-400',
+  red:   'text-red-600 dark:text-red-400',
+  gray:  'text-gray-600 dark:text-gray-400',
+}[props.color] || 'text-gray-900 dark:text-white'))
 
 const iconBg = computed(() => ({
-  blue:  'bg-blue-100 text-blue-600',
-  green: 'bg-emerald-100 text-emerald-600',
-  amber: 'bg-amber-100 text-amber-600',
-  red:   'bg-red-100 text-red-600',
-  gray:  'bg-gray-100 text-gray-600',
-}[props.color] || 'bg-gray-100 text-gray-600'))
+  blue:  'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+  green: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+  amber: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+  red:   'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+  gray:  'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+}[props.color] || 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'))
 </script>

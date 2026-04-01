@@ -36,6 +36,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
+known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
           script: |
             cd ~/domeenid/www.tak23heinlaid.itmajakas.ee/equipment
             git pull origin main

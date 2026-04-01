@@ -35,6 +35,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
           script: |
             cd ~/domeenid/www.tak23heinlaid.itmajakas.ee/equipment
             git pull origin main
@@ -50,6 +51,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
           source: "frontend/dist/*"
           target: ~/domeenid/www.tak23heinlaid.itmajakas.ee/htdocs/
           strip_components: 2

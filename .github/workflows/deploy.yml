@@ -29,31 +29,25 @@ jobs:
           echo "VITE_API_URL=https://api.tak23heinlaid.itmajakas.ee/api" > .env
           npm run build
 
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          fingerprint: ${{ secrets.SSH_FINGERPRINT }}
-          script: |
-            cd ~/domeenid/www.tak23heinlaid.itmajakas.ee/equipment
-            git pull origin main
-            cd backend
-            composer install --no-dev --optimize-autoloader
-            php artisan config:cache
-            php artisan route:cache
-            php artisan migrate --force
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H tak23heinlaid.itmajakas.ee >> ~/.ssh/known_hosts
 
-      - name: Copy frontend build to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          fingerprint: ${{ secrets.SSH_FINGERPRINT }}
-          source: "frontend/dist/*"
-          target: ~/domeenid/www.tak23heinlaid.itmajakas.ee/htdocs/
-          strip_components: 2
+      - name: Deploy to server
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no virt124154@tak23heinlaid.itmajakas.ee "
+            cd ~/domeenid/www.tak23heinlaid.itmajakas.ee/equipment &&
+            git pull origin main &&
+            cd backend &&
+            composer install --no-dev --optimize-autoloader &&
+            php artisan config:cache &&
+            php artisan route:cache &&
+            php artisan migrate --force
+          "
+
+      - name: Copy frontend to server
+        run: |
+          scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -r frontend/dist/* virt124154@tak23heinlaid.itmajakas.ee:~/domeenid/www.tak23heinlaid.itmajakas.ee/htdocs/

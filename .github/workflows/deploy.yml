@@ -36,7 +36,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          fingerprint: ${{ secrets.SSH_FINGERPRINT }}
           script: |
             cd ~/domeenid/www.tak23heinlaid.itmajakas.ee/equipment
             git pull origin main
@@ -53,6 +53,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
+          fingerprint: ${{ secrets.SSH_FINGERPRINT }}
           source: "frontend/dist/*"
           target: ~/domeenid/www.tak23heinlaid.itmajakas.ee/htdocs/
           strip_components: 2

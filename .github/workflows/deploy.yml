@@ -37,7 +37,10 @@ jobs:
           echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H tak23heinlaid.itmajakas.ee >> ~/.ssh/known_hosts
-          ssh-keygen -l -f ~/.ssh/id_ed25519
+
+      - name: Test SSH verbose
+        run: |
+          ssh -v -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no virt124154@tak23heinlaid.itmajakas.ee "echo connected" 2>&1 | tail -20
 
       - name: Deploy to server
         run: |

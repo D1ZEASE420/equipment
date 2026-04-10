@@ -6,13 +6,13 @@
         v-model="search"
         type="search"
         class="input-field flex-1"
-        placeholder="Search by name, serial or barcode…"
+        :placeholder="i18n.t('search_devices')"
         @input="filterDevices"
       />
       <select v-model="statusFilter" class="input-field sm:w-40" @change="filterDevices">
-        <option value="">All statuses</option>
-        <option value="available">Available</option>
-        <option value="borrowed">Borrowed</option>
+        <option value="">{{ i18n.t('all_statuses') }}</option>
+        <option value="available">{{ i18n.t('available') }}</option>
+        <option value="borrowed">{{ i18n.t('borrowed') }}</option>
       </select>
     </div>
 
@@ -24,8 +24,7 @@
     <!-- Empty state -->
     <div v-else-if="filtered.length === 0" class="card py-16 text-center">
       <p class="text-4xl mb-3">📦</p>
-      <p class="font-semibold text-gray-700">No devices found</p>
-      <p class="text-sm text-gray-400 mt-1">Try adjusting your search or filters.</p>
+      <p class="font-semibold text-gray-700 dark:text-gray-300">{{ i18n.t('no_devices') }}</p>
     </div>
 
     <!-- Devices grid -->
@@ -43,10 +42,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18nStore } from '@/stores/i18n'
 import { devicesApi } from '@/api/devices'
 import DeviceCard from '@/components/DeviceCard.vue'
 
-const router = useRouter()
+const router       = useRouter()
+const i18n         = useI18nStore()
 const loading      = ref(true)
 const devices      = ref([])
 const search       = ref('')

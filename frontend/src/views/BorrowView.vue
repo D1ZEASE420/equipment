@@ -5,23 +5,23 @@
     <div class="card flex overflow-hidden p-1">
       <button
         class="flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
-        :class="mode === 'borrow' ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+        :class="mode === 'borrow' ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
         @click="mode = 'borrow'; resetFeedback()"
       >
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>
-        Borrow Device
+        {{ i18n.t('borrow_device') }}
       </button>
       <button
         class="flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
-        :class="mode === 'return' ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+        :class="mode === 'return' ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
         @click="mode = 'return'; resetFeedback()"
       >
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18m-6 4v1a3 3 0 003 3h1a3 3 0 003-3V7a3 3 0 00-3-3h-1a3 3 0 00-3 3v1" />
         </svg>
-        Return Device
+        {{ i18n.t('return_device') }}
       </button>
     </div>
 
@@ -31,28 +31,24 @@
         v-if="feedback.message"
         class="rounded-xl border p-4 flex items-start gap-3"
         :class="{
-          'bg-emerald-50 border-emerald-200 text-emerald-800': feedback.type === 'success',
-          'bg-red-50 border-red-200 text-red-800':             feedback.type === 'error',
-          'bg-amber-50 border-amber-200 text-amber-800':       feedback.type === 'warning',
+          'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300': feedback.type === 'success',
+          'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300':                         feedback.type === 'error',
+          'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300':             feedback.type === 'warning',
         }"
       >
-        <!-- Success icon -->
         <svg v-if="feedback.type === 'success'" class="h-5 w-5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <!-- Error icon -->
         <svg v-else-if="feedback.type === 'error'" class="h-5 w-5 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <!-- Warning icon -->
         <svg v-else class="h-5 w-5 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
         <div>
-          <p class="font-semibold">{{ feedback.type === 'success' ? 'Success!' : feedback.type === 'error' ? 'Error' : 'Warning' }}</p>
-          <p class="text-sm mt-0.5">{{ feedback.message }}</p>
+          <p class="font-semibold">{{ feedback.message }}</p>
           <div v-if="feedback.device" class="mt-2 text-sm">
-            <p>Device: <strong>{{ feedback.device.name }}</strong></p>
+            <p>{{ i18n.t('device') }}: <strong>{{ feedback.device.name }}</strong></p>
             <p class="font-mono text-xs">{{ feedback.device.serial_number }}</p>
           </div>
         </div>
@@ -61,24 +57,24 @@
 
     <!-- Scanner card -->
     <div class="card p-6">
-      <h2 class="mb-1 text-lg font-bold text-gray-900">
-        {{ mode === 'borrow' ? 'Scan to Borrow' : 'Scan to Return' }}
+      <h2 class="mb-1 text-lg font-bold text-gray-900 dark:text-white">
+        {{ mode === 'borrow' ? i18n.t('borrow_device') : i18n.t('return_device') }}
       </h2>
       <p class="mb-5 text-sm text-gray-400">
-        Point your camera at a barcode, or type the serial number manually.
+        {{ i18n.t('scan_barcode') }}
       </p>
 
       <BarcodeScanner @detected="onBarcodeDetected" />
 
       <div class="my-5 flex items-center gap-3">
-        <div class="h-px flex-1 bg-gray-200" />
-        <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">or enter manually</span>
-        <div class="h-px flex-1 bg-gray-200" />
+        <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+        <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">or</span>
+        <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
       </div>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-gray-700">Barcode or Serial Number</label>
+          <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('enter_barcode') }}</label>
           <input
             v-model="identifier"
             type="text"
@@ -89,7 +85,7 @@
         </div>
 
         <div v-if="mode === 'borrow'">
-          <label class="mb-1.5 block text-sm font-medium text-gray-700">Due Date</label>
+          <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('due_date') }}</label>
           <input
             v-model="dueDate"
             type="date"
@@ -106,13 +102,10 @@
           :disabled="submitting || !identifier"
         >
           <span v-if="submitting" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          <svg v-else-if="mode === 'borrow'" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
           <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
-          {{ submitting ? 'Processing…' : (mode === 'borrow' ? 'Confirm Borrow' : 'Confirm Return') }}
+          {{ submitting ? '…' : (mode === 'borrow' ? i18n.t('confirm_borrow') : i18n.t('confirm_return')) }}
         </button>
       </form>
     </div>
@@ -122,10 +115,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18nStore } from '@/stores/i18n'
 import { borrowingsApi } from '@/api/borrowings'
 import BarcodeScanner from '@/components/BarcodeScanner.vue'
 
 const route = useRoute()
+const i18n  = useI18nStore()
 
 const mode       = ref('borrow')
 const identifier = ref('')
@@ -145,31 +140,17 @@ function setDefaultDueDate() {
   dueDate.value = d.toISOString().split('T')[0]
 }
 
-function resetFeedback() {
-  feedback.value = { type: '', message: '', device: null }
-}
-
-function onBarcodeDetected(code) {
-  identifier.value = code
-  handleSubmit()
-}
+function resetFeedback() { feedback.value = { type: '', message: '', device: null } }
+function onBarcodeDetected(code) { identifier.value = code; handleSubmit() }
 
 async function handleSubmit() {
   if (!identifier.value.trim()) return
-
   submitting.value = true
   resetFeedback()
-
   try {
     if (mode.value === 'borrow') {
-      if (!dueDate.value) {
-        feedback.value = { type: 'error', message: 'Please select a due date.' }
-        return
-      }
-      const { data } = await borrowingsApi.borrow({
-        identifier: identifier.value.trim(),
-        due_date:   dueDate.value,
-      })
+      if (!dueDate.value) { feedback.value = { type: 'error', message: 'Please select a due date.' }; return }
+      const { data } = await borrowingsApi.borrow({ identifier: identifier.value.trim(), due_date: dueDate.value })
       feedback.value = { type: 'success', message: data.message, device: data.borrowing?.device }
       identifier.value = ''
     } else {
@@ -178,8 +159,7 @@ async function handleSubmit() {
       identifier.value = ''
     }
   } catch (e) {
-    const msg = e.response?.data?.message || 'Something went wrong. Please try again.'
-    feedback.value = { type: 'error', message: msg }
+    feedback.value = { type: 'error', message: e.response?.data?.message || 'Something went wrong.' }
   } finally {
     submitting.value = false
   }

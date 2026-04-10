@@ -1,14 +1,14 @@
 <template>
-  <div class="flex h-screen overflow-hidden bg-gray-50">
+  <div class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
     <!-- Sidebar -->
     <aside
       :class="[
-        'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-gray-900 text-white transition-transform duration-300 lg:static lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-gray-900 dark:bg-gray-900 dark:border-r dark:border-gray-800 text-white transition-transform duration-300 lg:static lg:translate-x-0',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
       <!-- Logo -->
-      <div class="flex h-16 shrink-0 items-center gap-3 border-b border-gray-700 px-6">
+      <div class="flex h-16 shrink-0 items-center gap-3 border-b border-gray-700 dark:border-gray-800 px-6">
         <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600">
           <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V9l-6-6z" />
@@ -17,7 +17,7 @@
         </div>
         <div>
           <p class="text-sm font-semibold leading-tight">Equipment</p>
-          <p class="text-xs text-gray-400">Borrowing System</p>
+          <p class="text-xs text-gray-400">{{ i18n.t('title_system') }}</p>
         </div>
       </div>
 
@@ -37,8 +37,8 @@
       </nav>
 
       <!-- User info + Logout -->
-      <div class="border-t border-gray-700 p-4">
-        <div class="mb-3 flex items-center gap-3 rounded-lg bg-gray-800 px-3 py-2.5">
+      <div class="border-t border-gray-700 dark:border-gray-800 p-4">
+        <div class="mb-3 flex items-center gap-3 rounded-lg bg-gray-800 dark:bg-gray-900 px-3 py-2.5">
           <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">
             {{ userInitials }}
           </div>
@@ -52,7 +52,7 @@
           @click="handleLogout"
         >
           <IconLogout class="h-4 w-4" />
-          Sign out
+          {{ i18n.t('nav_signout') }}
         </button>
       </div>
     </aside>
@@ -67,28 +67,57 @@
     <!-- Main content -->
     <div class="flex flex-1 flex-col overflow-hidden">
       <!-- Top bar -->
-      <header class="flex h-16 shrink-0 items-center gap-4 border-b border-gray-200 bg-white px-4 shadow-sm lg:px-6">
+      <header class="flex h-16 shrink-0 items-center gap-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 shadow-sm lg:px-6">
         <button
-          class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 lg:hidden"
+          class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden"
           @click="sidebarOpen = !sidebarOpen"
         >
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <h1 class="text-lg font-semibold text-gray-900">{{ currentPageTitle }}</h1>
+        <h1 class="text-lg font-semibold text-gray-900 dark:text-white">{{ currentPageTitle }}</h1>
+
         <div class="ml-auto flex items-center gap-2">
           <span
             class="hidden rounded-full px-2.5 py-0.5 text-xs font-medium capitalize sm:inline-flex"
-            :class="auth.isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'"
+            :class="auth.isAdmin ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'"
           >
             {{ auth.user?.role }}
           </span>
+
+          <!-- Dark mode toggle -->
+          <button
+            @click="theme.toggleTheme()"
+            class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            :title="theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+          >
+            <!-- Sun icon (shown in dark mode) -->
+            <svg v-if="theme.isDark" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 110 10 5 5 0 010-10z" />
+            </svg>
+            <!-- Moon icon (shown in light mode) -->
+            <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+
+          <!-- Language toggle -->
+          <button
+            @click="i18n.toggleLocale()"
+            class="flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden transition-all hover:ring-2 hover:ring-primary-500 hover:ring-offset-1"
+            :title="i18n.isEstonian ? 'Switch to English' : 'Vaheta eesti keelele'"
+          >
+            <!-- Estonian flag (shown when language is EN — click to switch to ET) -->
+            <span v-if="!i18n.isEstonian" class="text-xl leading-none" title="Eesti keel">🇪🇪</span>
+            <!-- UK flag (shown when language is ET — click to switch to EN) -->
+            <span v-else class="text-xl leading-none" title="English">🇬🇧</span>
+          </button>
         </div>
       </header>
 
       <!-- Page content -->
-      <main class="flex-1 overflow-y-auto p-4 lg:p-6">
+      <main class="flex-1 overflow-y-auto p-4 lg:p-6 bg-gray-50 dark:bg-gray-900">
         <slot />
       </main>
     </div>
@@ -99,8 +128,12 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useI18nStore } from '@/stores/i18n'
+import { useThemeStore } from '@/stores/theme'
 
-const auth   = useAuthStore()
+const auth  = useAuthStore()
+const i18n  = useI18nStore()
+const theme = useThemeStore()
 const router = useRouter()
 const route  = useRoute()
 
@@ -142,27 +175,27 @@ const IconLogout = {
 
 import { h } from 'vue'
 
-const allNavItems = [
-  { to: '/dashboard',  label: 'Dashboard',   icon: IconDashboard, admin: false },
-  { to: '/devices',    label: 'Devices',      icon: IconDevices,   admin: false },
-  { to: '/borrow',     label: 'Borrow / Return', icon: IconBarcode, admin: false },
-  { to: '/borrowings', label: 'Borrowings',   icon: IconList,      admin: false },
-  { to: '/admin',      label: 'Admin Panel',  icon: IconAdmin,     admin: true  },
-]
+const allNavItems = computed(() => [
+  { to: '/dashboard',  label: i18n.t('nav_dashboard'), icon: IconDashboard, admin: false },
+  { to: '/devices',    label: i18n.t('nav_devices'),   icon: IconDevices,   admin: false },
+  { to: '/borrow',     label: i18n.t('nav_borrow'),    icon: IconBarcode,   admin: false },
+  { to: '/borrowings', label: i18n.t('nav_borrowings'),icon: IconList,      admin: false },
+  { to: '/admin',      label: i18n.t('nav_admin'),     icon: IconAdmin,     admin: true  },
+])
 
 const navItems = computed(() =>
-  allNavItems.filter(item => !item.admin || auth.isAdmin)
+  allNavItems.value.filter(item => !item.admin || auth.isAdmin)
 )
 
-const pageTitles = {
-  '/dashboard':  'Dashboard',
-  '/devices':    'Device Inventory',
-  '/borrow':     'Borrow / Return Device',
-  '/borrowings': 'Borrowing History',
-  '/admin':      'Admin Panel',
-}
+const pageTitles = computed(() => ({
+  '/dashboard':  i18n.t('title_dashboard'),
+  '/devices':    i18n.t('title_devices'),
+  '/borrow':     i18n.t('title_borrow'),
+  '/borrowings': i18n.t('title_borrowings'),
+  '/admin':      i18n.t('title_admin'),
+}))
 
-const currentPageTitle = computed(() => pageTitles[route.path] || 'Equipment System')
+const currentPageTitle = computed(() => pageTitles.value[route.path] || i18n.t('title_system'))
 
 const userInitials = computed(() => {
   const name = auth.user?.name || ''

@@ -3,28 +3,28 @@
     <!-- Header row -->
     <div class="flex items-start justify-between gap-2">
       <div class="flex-1 min-w-0">
-        <h3 class="truncate font-semibold text-gray-900">{{ device.name }}</h3>
+        <h3 class="truncate font-semibold text-gray-900 dark:text-white">{{ device.name }}</h3>
         <p class="mt-0.5 font-mono text-xs text-gray-400">{{ device.serial_number }}</p>
       </div>
       <span
         class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize"
         :class="device.status === 'available'
-          ? 'bg-emerald-100 text-emerald-700'
-          : 'bg-amber-100 text-amber-700'"
+          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+          : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'"
       >
-        {{ device.status }}
+        {{ device.status === 'available' ? i18n.t('available') : i18n.t('borrowed') }}
       </span>
     </div>
 
     <!-- Barcode badge -->
-    <div class="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
+    <div class="flex items-center gap-2 rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2">
       <svg class="h-4 w-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
       </svg>
-      <span class="font-mono text-xs text-gray-500">{{ device.barcode }}</span>
+      <span class="font-mono text-xs text-gray-500 dark:text-gray-400">{{ device.barcode }}</span>
     </div>
 
-    <!-- Borrower info (if borrowed) -->
+    <!-- Borrower info -->
     <div v-if="device.borrowing" class="space-y-1">
       <div class="flex items-center gap-2">
         <div
@@ -43,10 +43,10 @@
           {{ statusLabel(device.borrowing.status_color) }}
         </span>
       </div>
-      <p class="text-xs text-gray-500">
-        Borrowed by <span class="font-medium text-gray-700">{{ device.borrowing.user.name }}</span>
+      <p class="text-xs text-gray-500 dark:text-gray-400">
+        {{ i18n.t('borrowed_by') }}: <span class="font-medium text-gray-700 dark:text-gray-300">{{ device.borrowing.user.name }}</span>
       </p>
-      <p class="text-xs text-gray-400">Due: {{ formatDate(device.borrowing.due_date) }}</p>
+      <p class="text-xs text-gray-400">{{ i18n.t('due_date') }}: {{ formatDate(device.borrowing.due_date) }}</p>
     </div>
 
     <!-- Action button -->
@@ -56,16 +56,20 @@
         class="btn-primary w-full text-xs py-1.5"
         @click="$emit('borrow', device)"
       >
-        Borrow this device
+        {{ i18n.t('borrow') }}
       </button>
-      <p v-else class="text-center text-xs text-gray-400">Currently unavailable</p>
+      <p v-else class="text-center text-xs text-gray-400">{{ i18n.t('status_borrowed') }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
+import { useI18nStore } from '@/stores/i18n'
+
 defineProps({ device: Object })
 defineEmits(['borrow'])
+
+const i18n = useI18nStore()
 
 function formatDate(date) {
   if (!date) return '—'

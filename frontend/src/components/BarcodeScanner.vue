@@ -76,7 +76,7 @@
 
 <script setup>
 import { ref, onBeforeUnmount } from 'vue'
-import Quagga from 'quagga'
+import Quagga from '@ericblade/quagga2'
 
 const emit = defineEmits(['detected'])
 

@@ -15,7 +15,7 @@
       </button>
     </div>
 
-    <!-- Search -->
+    <!-- Search --> 
     <div class="relative">
       <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -131,6 +131,14 @@
                 <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Kirjeldus</label>
                 <textarea v-model="form.description" rows="2" class="input-field resize-none" placeholder="Valikulised märkused…" />
               </div>
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Maht (nt. 16GB)</label>
+                <input v-model="form.capacity" type="text" class="input-field" placeholder="nt. 16GB, 64GB" />
+              </div>
+              <div class="flex items-center gap-3">
+                <input v-model="form.loanable" type="checkbox" id="loanable-check" class="h-4 w-4 rounded border-gray-300 text-primary-600" />
+                <label for="loanable-check" class="text-sm font-medium text-gray-700 dark:text-gray-300">Laenutatav (tühjenda, kui seade pole laenuks)</label>
+              </div>
               <div class="flex gap-3 pt-2">
                 <button type="button" class="btn-secondary flex-1" @click="closeModal">{{ i18n.t('cancel') }}</button>
                 <button type="submit" class="btn-primary flex-1" :disabled="saving">
@@ -189,7 +197,7 @@ const saving          = ref(false)
 const deleting        = ref(false)
 const formError       = ref('')
 
-const emptyForm = () => ({ name: '', serial_number: '', barcode: '', description: '', category: '' })
+const emptyForm = () => ({ name: '', serial_number: '', barcode: '', description: '', category: '', loanable: true, capacity: '' })
 const form = ref(emptyForm())
 
 const filtered = computed(() => {

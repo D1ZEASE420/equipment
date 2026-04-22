@@ -60,11 +60,23 @@ class StudentController extends Controller
     }
 
     // DELETE /students/{id} — delete one student
-    public function destroy(Student $student): JsonResponse
-    {
-        $student->delete();
-        return response()->json(['message' => 'Deleted.']);
+public function destroy(Student $student): JsonResponse
+{
+    // Hard backend check: block delete if student has active borrowings
+    $activeBorrowings = Borrowing::where('student_email', $student->email)
+        ->whereNull('returned_at')
+        ->count();
+
+    if ($activeBorrowings > 0) {
+        return response()->json([
+            'message'         => "Õpilasel on {$activeBorrowings} aktiivne laenatus. Kustutamine blokeeritud.",
+            'active_count'    => $activeBorrowings,
+        ], 422);
     }
+
+    $student->delete();
+    return response()->json(['message' => 'Kustutatud.']);
+}
 
     // POST /students/import — bulk import from JSON array
     public function import(Request $request): JsonResponse

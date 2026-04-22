@@ -1,27 +1,23 @@
 import api from './axios'
 
 export const devicesApi = {
-  getAll(params = {}) {
-    return api.get('/devices', { params })
-  },
+  getAll:       (params = {}) => api.get('/devices', { params }),
+  getOne:       (id)          => api.get(`/devices/${id}`),
+  getCategories:()            => api.get('/devices/categories'),
+  getCapacities:()            => api.get('/devices/capacities'),
+  create:       (data)        => api.post('/devices', data),
+  update:       (id, data)    => api.put(`/devices/${id}`, data),
+  remove:       (id)          => api.delete(`/devices/${id}`),
 
-  getCategories() {
-    return api.get('/devices/categories')
-  },
-
-  getOne(id) {
-    return api.get(`/devices/${id}`)
-  },
-
-  create(data) {
-    return api.post('/devices', data)
-  },
-
-  update(id, data) {
-    return api.put(`/devices/${id}`, data)
-  },
-
-  delete(id) {
-    return api.delete(`/devices/${id}`)
+  exportCSV() {
+    // Opens CSV download directly in the browser
+    const token = localStorage.getItem('token')
+    const base  = import.meta.env.VITE_API_URL || '/api'
+    const a     = document.createElement('a')
+    a.href      = `${base}/devices/export`
+    // attach token via query param since we can't set headers on anchor tags
+    a.href     += `?token=${encodeURIComponent(token)}`
+    a.download  = 'seadmed.csv'
+    a.click()
   },
 }

@@ -14,36 +14,44 @@
     </div>
 
     <!-- Stats grid -->
-    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-      <StatCard :label="i18n.t('stat_total')"     :value="stats.total"     color="blue">
-        <template #icon>
-          <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-          </svg>
-        </template>
-      </StatCard>
-      <StatCard :label="i18n.t('stat_available')" :value="stats.available" color="green">
-        <template #icon>
-          <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </template>
-      </StatCard>
-      <StatCard :label="i18n.t('stat_borrowed')"  :value="stats.borrowed"  color="amber">
-        <template #icon>
-          <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-        </template>
-      </StatCard>
-      <StatCard :label="i18n.t('stat_overdue')"   :value="stats.overdue"   color="red">
-        <template #icon>
-          <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        </template>
-      </StatCard>
-    </div>
+<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+  <div @click="goToDevices('')" class="cursor-pointer">
+    <StatCard :label="i18n.t('stat_total')" :value="stats.total" color="blue">
+      <template #icon>
+        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      </template>
+    </StatCard>
+  </div>
+  <div @click="goToDevices('available')" class="cursor-pointer">
+    <StatCard :label="i18n.t('stat_available')" :value="stats.available" color="green">
+      <template #icon>
+        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </template>
+    </StatCard>
+  </div>
+  <div @click="goToDevices('borrowed')" class="cursor-pointer">
+    <StatCard :label="i18n.t('stat_borrowed')" :value="stats.borrowed" color="amber">
+      <template #icon>
+        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+      </template>
+    </StatCard>
+  </div>
+  <div @click="goToDevices('borrowed')" class="cursor-pointer">
+    <StatCard :label="i18n.t('stat_overdue')" :value="stats.overdue" color="red">
+      <template #icon>
+        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </template>
+    </StatCard>
+  </div>
+</div>
 
     <!-- Recent activity -->
     <div class="card">
@@ -148,6 +156,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useI18nStore } from '@/stores/i18n'
 import { devicesApi } from '@/api/devices'
@@ -155,6 +164,11 @@ import { borrowingsApi } from '@/api/borrowings'
 import StatCard from '@/components/StatCard.vue'
 
 const auth    = useAuthStore()
+const router  = useRouter()
+
+function goToDevices(status) {
+  router.push({ path: '/devices', query: status ? { status } : {} })
+}
 const i18n    = useI18nStore()
 const loading    = ref(true)
 const devices    = ref([])

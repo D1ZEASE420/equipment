@@ -6,7 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Device extends Model
 {
-    protected $fillable = ['name', 'serial_number', 'barcode', 'status', 'description', 'category'];
+    protected $fillable = [
+        'name', 'serial_number', 'barcode', 'status',
+        'description', 'category', 'loanable', 'capacity',
+    ];
+
+    protected $casts = [
+        'loanable' => 'boolean',
+    ];
 
     public function borrowings()
     {

@@ -140,6 +140,11 @@ const translations = {
     status_overdue:     'Tähtaeg ületatud',
     status_returned:    'Tagastatud',
     status_active:      'Aktiivne',
+
+    loanable_devices:   'Laenutatavad seadmed',
+      not_for_loan:       'Mitte laenuks',
+      export_csv:         'Ekspordi CSV',
+      filter_capacity:    'Filtreeri mahu järgi',
   },
 }
 

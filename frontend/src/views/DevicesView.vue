@@ -1,6 +1,24 @@
 <template>
   <div class="space-y-4">
 
+    <!-- Loanable / Not-for-loan tab toggle -->
+    <div class="card flex overflow-hidden p-1 w-fit">
+      <button
+        @click="loanableTab = true"
+        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
+        :class="loanableTab ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'"
+      >
+        {{ i18n.t('loanable_devices') }}
+      </button>
+      <button
+        @click="loanableTab = false"
+        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
+        :class="!loanableTab ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'"
+      >
+        {{ i18n.t('not_for_loan') }}
+      </button>
+    </div>
+
     <!-- Filter bar -->
     <div class="card p-4 space-y-3">
       <div class="flex flex-col gap-3 sm:flex-row">
@@ -15,6 +33,13 @@
           <option value="available">{{ i18n.t('available') }}</option>
           <option value="borrowed">{{ i18n.t('borrowed') }}</option>
         </select>
+        <!-- Export button (admin only) -->
+        <button v-if="isAdmin" @click="handleExport" class="btn-secondary shrink-0 flex items-center gap-2 text-sm">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          {{ i18n.t('export_csv') }}
+        </button>
       </div>
 
       <!-- Category multiselect -->
@@ -35,11 +60,31 @@
             </svg>
             {{ cat }}
           </button>
+          <button v-if="selectedCategories.length > 0" @click="selectedCategories = []" class="text-xs text-gray-400 hover:text-red-500 underline">
+            Tühjenda
+          </button>
+        </div>
+      </div>
+
+      <!-- Capacity filter (only shown if any device has capacity) -->
+      <div v-if="capacities.length > 0">
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">{{ i18n.t('filter_capacity') }}</p>
+        <div class="flex flex-wrap gap-2">
           <button
-            v-if="selectedCategories.length > 0"
-            @click="selectedCategories = []"
-            class="text-xs text-gray-400 hover:text-red-500 underline"
+            v-for="cap in capacities"
+            :key="cap"
+            @click="toggleCapacity(cap)"
+            class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border transition-colors"
+            :class="selectedCapacities.includes(cap)
+              ? 'bg-indigo-600 border-indigo-600 text-white'
+              : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-indigo-400'"
           >
+            <svg v-if="selectedCapacities.includes(cap)" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ cap }}
+          </button>
+          <button v-if="selectedCapacities.length > 0" @click="selectedCapacities = []" class="text-xs text-gray-400 hover:text-red-500 underline">
             Tühjenda
           </button>
         </div>
@@ -77,6 +122,7 @@
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs font-mono text-gray-400">{{ device.serial_number }}</span>
               <span v-if="device.category" class="inline-block rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400">{{ device.category }}</span>
+              <span v-if="device.capacity" class="inline-block rounded-full bg-indigo-100 dark:bg-indigo-900/30 px-2 py-0.5 text-xs text-indigo-600 dark:text-indigo-400">{{ device.capacity }}</span>
               <span v-if="device.borrowing" class="text-xs"
                 :class="{
                   'text-emerald-600': device.borrowing.status_color === 'green',
@@ -91,7 +137,6 @@
 
           <!-- Actions (admin only) -->
           <div v-if="isAdmin" class="flex items-center gap-2 shrink-0">
-            <!-- Bell notification button (only when borrowed and has student email) -->
             <button
               v-if="device.status === 'borrowed' && device.borrowing?.student_email"
               @click="sendNotification(device)"
@@ -104,8 +149,9 @@
               </svg>
             </button>
 
-            <!-- Borrow / Return button -->
+            <!-- Only show borrow/return button for loanable devices -->
             <button
+              v-if="device.loanable"
               @click="handleAction(device)"
               class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
               :class="device.status === 'available'
@@ -118,6 +164,7 @@
             >
               {{ device.status === 'available' ? i18n.t('borrow') : i18n.t('return') }}
             </button>
+            <span v-else class="text-xs text-gray-400 italic">{{ i18n.t('not_for_loan') }}</span>
           </div>
 
           <!-- Student view: only show status badge -->
@@ -146,26 +193,30 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { devicesApi } from '@/api/devices'
 import { borrowingsApi } from '@/api/borrowings'
 
 const router   = useRouter()
+const route    = useRoute()
 const i18n     = useI18nStore()
 const auth     = useAuthStore()
 const isAdmin  = computed(() => auth.isAdmin)
 
-const loading            = ref(true)
-const devices            = ref([])
-const categories         = ref([])
-const search             = ref('')
-const statusFilter       = ref('')
-const selectedCategories = ref([])
-const notifyingId        = ref(null)
-const toast              = ref('')
+const loading             = ref(true)
+const devices             = ref([])
+const categories          = ref([])
+const capacities          = ref([])
+const search              = ref('')
+const statusFilter        = ref('')
+const selectedCategories  = ref([])
+const selectedCapacities  = ref([])
+const loanableTab         = ref(true)
+const notifyingId         = ref(null)
+const toast               = ref('')
 
 function showToast(msg) {
   toast.value = msg
@@ -178,8 +229,15 @@ function toggleCategory(cat) {
   else selectedCategories.value.splice(idx, 1)
 }
 
+function toggleCapacity(cap) {
+  const idx = selectedCapacities.value.indexOf(cap)
+  if (idx === -1) selectedCapacities.value.push(cap)
+  else selectedCapacities.value.splice(idx, 1)
+}
+
 const filtered = computed(() => {
-  let list = devices.value
+  let list = devices.value.filter(d => d.loanable === loanableTab.value)
+
   if (search.value) {
     const q = search.value.toLowerCase()
     list = list.filter(d =>
@@ -193,6 +251,9 @@ const filtered = computed(() => {
   }
   if (selectedCategories.value.length > 0) {
     list = list.filter(d => selectedCategories.value.includes(d.category))
+  }
+  if (selectedCapacities.value.length > 0) {
+    list = list.filter(d => selectedCapacities.value.includes(d.capacity))
   }
   return list
 })
@@ -210,6 +271,10 @@ function handleAction(device) {
   }
 }
 
+function handleExport() {
+  devicesApi.exportCSV()
+}
+
 async function sendNotification(device) {
   if (!device.borrowing?.id) return
   notifyingId.value = device.id
@@ -224,13 +289,18 @@ async function sendNotification(device) {
 }
 
 onMounted(async () => {
+  // Read status filter from route query (set by dashboard stat card clicks)
+  if (route.query.status) statusFilter.value = route.query.status
+
   try {
-    const [devRes, catRes] = await Promise.all([
+    const [devRes, catRes, capRes] = await Promise.all([
       devicesApi.getAll(),
       devicesApi.getCategories(),
+      devicesApi.getCapacities(),
     ])
     devices.value    = devRes.data
     categories.value = catRes.data
+    capacities.value = capRes.data
   } finally {
     loading.value = false
   }

@@ -13,35 +13,42 @@ class DeviceController extends Controller
     {
         $query = Device::with(['activeBorrowing.user']);
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('serial_number', 'like', "%{$search}%")
-                  ->orWhere('barcode', 'like', "%{$search}%");
-            });
+        if ($request->has('categories') && $request->categories !== '') {
+            $cats = explode(',', $request->categories);
+            $query->whereIn('category', $cats);
         }
 
-        if ($request->filled('status')) {
+        if ($request->has('status') && $request->status !== '') {
             $query->where('status', $request->status);
         }
 
-        $devices = $query->orderBy('name')->get()->map(function (Device $device) {
-            $borrowing = $device->activeBorrowing;
+        if ($request->has('search') && $request->search !== '') {
+            $q = $request->search;
+            $query->where(function ($q2) use ($q) {
+                $q2->where('name', 'like', "%{$q}%")
+                   ->orWhere('serial_number', 'like', "%{$q}%")
+                   ->orWhere('barcode', 'like', "%{$q}%");
+            });
+        }
+
+        $devices = $query->orderBy('name')->get()->map(function (Device $d) {
+            $borrowing = $d->activeBorrowing;
             return [
-                'id'            => $device->id,
-                'name'          => $device->name,
-                'serial_number' => $device->serial_number,
-                'barcode'       => $device->barcode,
-                'status'        => $device->status,
-                'description'   => $device->description,
-                'created_at'    => $device->created_at,
+                'id'            => $d->id,
+                'name'          => $d->name,
+                'serial_number' => $d->serial_number,
+                'barcode'       => $d->barcode,
+                'status'        => $d->status,
+                'description'   => $d->description,
+                'category'      => $d->category,
                 'borrowing'     => $borrowing ? [
-                    'id'           => $borrowing->id,
-                    'borrowed_at'  => $borrowing->borrowed_at,
-                    'due_date'     => $borrowing->due_date,
-                    'status_color' => $borrowing->status_color,
-                    'user'         => ['id' => $borrowing->user->id, 'name' => $borrowing->user->name],
+                    'id'            => $borrowing->id,
+                    'user'          => $borrowing->user ? ['id' => $borrowing->user->id, 'name' => $borrowing->user->name] : null,
+                    'student_name'  => $borrowing->student_name,
+                    'student_email' => $borrowing->student_email,
+                    'due_date'      => $borrowing->due_date,
+                    'due_time'      => $borrowing->due_time,
+                    'status_color'  => $borrowing->status_color,
                 ] : null,
             ];
         });
@@ -49,45 +56,57 @@ class DeviceController extends Controller
         return response()->json($devices);
     }
 
-    public function store(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'name'          => ['required', 'string', 'max:255'],
-            'serial_number' => ['required', 'string', 'max:255', 'unique:devices'],
-            'barcode'       => ['required', 'string', 'max:255', 'unique:devices'],
-            'description'   => ['nullable', 'string'],
-        ]);
-
-        $device = Device::create($validated);
-        return response()->json($device, 201);
-    }
-
     public function show(Device $device): JsonResponse
     {
-        $device->load(['activeBorrowing.user', 'borrowings.user']);
+        $device->load('activeBorrowing.user');
         return response()->json($device);
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'name'          => ['required', 'string', 'max:255'],
+            'serial_number' => ['required', 'string', 'unique:devices'],
+            'barcode'       => ['required', 'string', 'unique:devices'],
+            'description'   => ['nullable', 'string'],
+            'category'      => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $device = Device::create($data);
+        return response()->json($device, 201);
     }
 
     public function update(Request $request, Device $device): JsonResponse
     {
-        $validated = $request->validate([
-            'name'          => ['sometimes', 'required', 'string', 'max:255'],
-            'serial_number' => ['sometimes', 'required', 'string', 'max:255', 'unique:devices,serial_number,' . $device->id],
-            'barcode'       => ['sometimes', 'required', 'string', 'max:255', 'unique:devices,barcode,' . $device->id],
+        $data = $request->validate([
+            'name'          => ['sometimes', 'string', 'max:255'],
+            'serial_number' => ['sometimes', 'string', 'unique:devices,serial_number,' . $device->id],
+            'barcode'       => ['sometimes', 'string', 'unique:devices,barcode,' . $device->id],
             'description'   => ['nullable', 'string'],
+            'category'      => ['nullable', 'string', 'max:100'],
         ]);
 
-        $device->update($validated);
+        $device->update($data);
         return response()->json($device);
     }
 
     public function destroy(Device $device): JsonResponse
     {
         if ($device->isBorrowed()) {
-            return response()->json(['message' => 'Cannot delete a device that is currently borrowed.'], 422);
+            return response()->json(['message' => 'Laenutatud seadet ei saa kustutada.'], 422);
         }
-
         $device->delete();
-        return response()->json(['message' => 'Device deleted successfully.']);
+        return response()->json(['message' => 'Seade kustutatud.']);
+    }
+
+    // GET /devices/categories — list all unique categories
+    public function categories(): JsonResponse
+    {
+        $cats = Device::whereNotNull('category')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+
+        return response()->json($cats);
     }
 }

@@ -178,8 +178,9 @@ import { h } from 'vue'
 const allNavItems = computed(() => [
   { to: '/dashboard',  label: i18n.t('nav_dashboard'), icon: IconDashboard, admin: false },
   { to: '/devices',    label: i18n.t('nav_devices'),   icon: IconDevices,   admin: false },
-  { to: '/borrow',     label: i18n.t('nav_borrow'),    icon: IconBarcode,   admin: false },
+  { to: '/borrow',     label: i18n.t('nav_borrow'),    icon: IconBarcode,   admin: true  },
   { to: '/borrowings', label: i18n.t('nav_borrowings'),icon: IconList,      admin: false },
+  { to: '/students',   label: i18n.t('nav_students'),  icon: IconAdmin,     admin: true  },
   { to: '/admin',      label: i18n.t('nav_admin'),     icon: IconAdmin,     admin: true  },
 ])
 
@@ -193,6 +194,7 @@ const pageTitles = computed(() => ({
   '/borrow':     i18n.t('title_borrow'),
   '/borrowings': i18n.t('title_borrowings'),
   '/admin':      i18n.t('title_admin'),
+  '/students':   i18n.t('title_students'),
 }))
 
 const currentPageTitle = computed(() => pageTitles.value[route.path] || i18n.t('title_system'))

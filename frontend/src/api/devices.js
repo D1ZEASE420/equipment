@@ -5,6 +5,10 @@ export const devicesApi = {
     return api.get('/devices', { params })
   },
 
+  getCategories() {
+    return api.get('/devices/categories')
+  },
+
   getOne(id) {
     return api.get(`/devices/${id}`)
   },

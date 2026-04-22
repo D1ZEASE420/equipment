@@ -34,12 +34,12 @@
         <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-800">
           <thead class="bg-gray-50 dark:bg-gray-800">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ i18n.t('device') }}</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ i18n.t('serial') }}</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Barcode</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ i18n.t('status') }}</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ i18n.t('borrowed_by') }}</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ i18n.t('actions') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{{ i18n.t('device') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{{ i18n.t('category') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{{ i18n.t('serial') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{{ i18n.t('status') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">{{ i18n.t('borrowed_by') }}</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">{{ i18n.t('actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
@@ -51,8 +51,11 @@
                 <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ device.name }}</p>
                 <p v-if="device.description" class="text-xs text-gray-400 truncate max-w-xs">{{ device.description }}</p>
               </td>
+              <td class="px-4 py-3">
+                <span v-if="device.category" class="inline-block rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs">{{ device.category }}</span>
+                <span v-else class="text-xs text-gray-400">—</span>
+              </td>
               <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">{{ device.serial_number }}</td>
-              <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">{{ device.barcode }}</td>
               <td class="px-4 py-3">
                 <span
                   class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize"
@@ -65,21 +68,18 @@
               </td>
               <td class="px-4 py-3">
                 <div v-if="device.borrowing">
-                  <p class="text-sm text-gray-700 dark:text-gray-300">{{ device.borrowing.user.name }}</p>
+                  <p class="text-sm text-gray-700 dark:text-gray-300">{{ device.borrowing.student_name || device.borrowing.user?.name }}</p>
                   <p class="text-xs" :class="{
                     'text-emerald-600': device.borrowing.status_color === 'green',
                     'text-amber-600':   device.borrowing.status_color === 'yellow',
                     'text-red-600':     device.borrowing.status_color === 'red',
-                  }">{{ i18n.t('due_date') }}: {{ formatDate(device.borrowing.due_date) }}</p>
+                  }">{{ i18n.t('due_date') }}: {{ formatDate(device.borrowing.due_date) }} {{ device.borrowing.due_time }}</p>
                 </div>
                 <span v-else class="text-xs text-gray-400">—</span>
               </td>
               <td class="px-4 py-3 text-right">
                 <div class="flex items-center justify-end gap-2">
-                  <button
-                    class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    @click="openModal(device)"
-                  >
+                  <button class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" @click="openModal(device)">
                     {{ i18n.t('edit') }}
                   </button>
                   <button
@@ -107,45 +107,35 @@
               {{ editingDevice ? i18n.t('edit') + ' ' + i18n.t('device') : i18n.t('add_device') }}
             </h3>
             <form @submit.prevent="handleSave" class="space-y-4">
-              <div v-if="formError" class="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-400">
-                {{ formError }}
-              </div>
+              <div v-if="formError" class="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 p-3 text-sm text-red-700 dark:text-red-400">{{ formError }}</div>
               <div>
                 <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('name') }} *</label>
-                <input v-model="form.name" type="text" required class="input-field" placeholder='e.g. MacBook Pro 14"' />
+                <input v-model="form.name" type="text" required class="input-field" placeholder='nt. MacBook Pro 14"' />
+              </div>
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('category') }}</label>
+                <input v-model="form.category" type="text" class="input-field" placeholder="nt. Läpakad" list="cat-list" />
+                <datalist id="cat-list">
+                  <option v-for="c in existingCategories" :key="c" :value="c" />
+                </datalist>
               </div>
               <div>
                 <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('serial') }} *</label>
-                <input v-model="form.serial_number" type="text" required class="input-field font-mono" placeholder="e.g. MBP-2024-001" />
+                <input v-model="form.serial_number" type="text" required class="input-field font-mono" placeholder="nt. MBP-2024-001" />
               </div>
               <div>
-                <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Barcode *</label>
-                <div class="flex gap-2">
-                  <input v-model="form.barcode" type="text" required class="input-field font-mono flex-1" placeholder="e.g. 1001001001001" />
-                  <button
-                    type="button"
-                    class="btn-secondary shrink-0 px-3"
-                    :class="{ 'bg-primary-50 border-primary-300 text-primary-600': scannerOpen }"
-                    @click="scannerOpen = !scannerOpen"
-                  >
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                    </svg>
-                  </button>
-                </div>
-                <div v-if="scannerOpen" class="mt-3">
-                  <BarcodeScanner @detected="onBarcodeScanned" />
-                </div>
+                <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Vöökood *</label>
+                <input v-model="form.barcode" type="text" required class="input-field font-mono" placeholder="nt. 1001001001001" />
               </div>
               <div>
-                <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('name') }}</label>
-                <textarea v-model="form.description" rows="2" class="input-field resize-none" placeholder="Optional notes…" />
+                <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Kirjeldus</label>
+                <textarea v-model="form.description" rows="2" class="input-field resize-none" placeholder="Valikulised märkused…" />
               </div>
               <div class="flex gap-3 pt-2">
                 <button type="button" class="btn-secondary flex-1" @click="closeModal">{{ i18n.t('cancel') }}</button>
                 <button type="submit" class="btn-primary flex-1" :disabled="saving">
                   <span v-if="saving" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  {{ saving ? i18n.t('save') + '…' : (editingDevice ? i18n.t('save') : i18n.t('add_device')) }}
+                  {{ saving ? '…' : (editingDevice ? i18n.t('save') : i18n.t('add_device')) }}
                 </button>
               </div>
             </form>
@@ -166,9 +156,7 @@
               </svg>
             </div>
             <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ i18n.t('delete') }}?</h3>
-            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              <strong>{{ deleteTarget.name }}</strong>
-            </p>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400"><strong>{{ deleteTarget.name }}</strong></p>
             <div class="mt-5 flex gap-3">
               <button class="btn-secondary flex-1" @click="deleteTarget = null">{{ i18n.t('cancel') }}</button>
               <button class="btn-danger flex-1" :disabled="deleting" @click="handleDelete">
@@ -188,21 +176,20 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { devicesApi } from '@/api/devices'
-import BarcodeScanner from '@/components/BarcodeScanner.vue'
 
-const i18n          = useI18nStore()
-const loading       = ref(true)
-const devices       = ref([])
-const search        = ref('')
-const showModal     = ref(false)
-const editingDevice = ref(null)
-const deleteTarget  = ref(null)
-const saving        = ref(false)
-const deleting      = ref(false)
-const formError     = ref('')
-const scannerOpen   = ref(false)
+const i18n            = useI18nStore()
+const loading         = ref(true)
+const devices         = ref([])
+const existingCategories = ref([])
+const search          = ref('')
+const showModal       = ref(false)
+const editingDevice   = ref(null)
+const deleteTarget    = ref(null)
+const saving          = ref(false)
+const deleting        = ref(false)
+const formError       = ref('')
 
-const emptyForm = () => ({ name: '', serial_number: '', barcode: '', description: '' })
+const emptyForm = () => ({ name: '', serial_number: '', barcode: '', description: '', category: '' })
 const form = ref(emptyForm())
 
 const filtered = computed(() => {
@@ -217,15 +204,14 @@ const filtered = computed(() => {
 
 function formatDate(date) {
   if (!date) return '—'
-  return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(date).toLocaleDateString('et-EE', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function openModal(device = null) {
   formError.value     = ''
   editingDevice.value = device
-  scannerOpen.value   = false
   form.value = device
-    ? { name: device.name, serial_number: device.serial_number, barcode: device.barcode, description: device.description || '' }
+    ? { name: device.name, serial_number: device.serial_number, barcode: device.barcode, description: device.description || '', category: device.category || '' }
     : emptyForm()
   showModal.value = true
 }
@@ -233,13 +219,11 @@ function openModal(device = null) {
 function closeModal() {
   showModal.value     = false
   editingDevice.value = null
-  scannerOpen.value   = false
   form.value          = emptyForm()
   formError.value     = ''
 }
 
 function confirmDelete(device) { deleteTarget.value = device }
-function onBarcodeScanned(code) { form.value.barcode = code; scannerOpen.value = false }
 
 async function handleSave() {
   saving.value    = true
@@ -253,10 +237,13 @@ async function handleSave() {
       const { data } = await devicesApi.create(form.value)
       devices.value.unshift(data)
     }
+    // refresh categories
+    const catRes = await devicesApi.getCategories()
+    existingCategories.value = catRes.data
     closeModal()
   } catch (e) {
     const errs = e.response?.data?.errors
-    formError.value = errs ? Object.values(errs).flat().join(' ') : (e.response?.data?.message || 'Failed to save.')
+    formError.value = errs ? Object.values(errs).flat().join(' ') : (e.response?.data?.message || 'Salvestamine ebaõnnestus.')
   } finally {
     saving.value = false
   }
@@ -270,7 +257,7 @@ async function handleDelete() {
     devices.value      = devices.value.filter(d => d.id !== deleteTarget.value.id)
     deleteTarget.value = null
   } catch (e) {
-    alert(e.response?.data?.message || 'Failed to delete.')
+    alert(e.response?.data?.message || 'Kustutamine ebaõnnestus.')
   } finally {
     deleting.value = false
   }
@@ -278,8 +265,12 @@ async function handleDelete() {
 
 onMounted(async () => {
   try {
-    const { data } = await devicesApi.getAll()
-    devices.value = data
+    const [devRes, catRes] = await Promise.all([
+      devicesApi.getAll(),
+      devicesApi.getCategories(),
+    ])
+    devices.value            = devRes.data
+    existingCategories.value = catRes.data
   } finally {
     loading.value = false
   }

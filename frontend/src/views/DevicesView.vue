@@ -236,7 +236,7 @@ function toggleCapacity(cap) {
 }
 
 const filtered = computed(() => {
-  let list = devices.value.filter(d => d.loanable === loanableTab.value)
+  let list = devices.value.filter(d => Boolean(d.loanable) === loanableTab.value)
 
   if (search.value) {
     const q = search.value.toLowerCase()

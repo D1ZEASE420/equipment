@@ -67,10 +67,10 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($devices as $data) {
-            Device::firstOrCreate(
-                ['serial_number' => $data['serial_number'], 'barcode' => $data['barcode']],
+            Device::updateOrCreate(
+                ['serial_number' => $data['serial_number']],
                 array_merge($data, ['status' => 'available', 'description' => 'School equipment available for borrowing.'])
             );
-        }
+}
     }
 }

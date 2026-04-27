@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 
 const translations = {
   et: {
-    // Navigatsioon
     nav_dashboard:   'Töölaud',
     nav_devices:     'Seadmed',
     nav_borrow:      'Laenuta / Tagasta',
@@ -12,7 +11,6 @@ const translations = {
     nav_students:    'Õpilased',
     nav_signout:     'Logi välja',
 
-    // Lehekülje pealkirjad
     title_dashboard:  'Töölaud',
     title_devices:    'Seadmete inventar',
     title_borrow:     'Laenuta / Tagasta seade',
@@ -21,7 +19,6 @@ const translations = {
     title_system:     'Seadmete süsteem',
     title_students:   'Õpilaste nimekiri',
 
-    // Töölaud
     welcome_back:     'Tere tulemast tagasi',
     admin_desc:       'Admini töölaud — halda seadmeid ja jälgi laenutusi.',
     student_desc:     'Sirvi seadmeid ja laenutuste infot.',
@@ -39,7 +36,6 @@ const translations = {
     due_time:         'Tagastamise kellaaeg',
     status:           'Olek',
 
-    // Sisselogimine
     sign_in:          'Logi sisse',
     sign_in_account:  'Logi oma kontole sisse',
     email:            'E-posti aadress',
@@ -49,7 +45,6 @@ const translations = {
     register:         'Registreeru',
     demo_credentials: 'Demo andmed',
 
-    // Registreerimine
     create_account:   'Loo konto',
     join_system:      'Liitu seadmete süsteemiga',
     full_name:        'Täisnimi',
@@ -57,7 +52,6 @@ const translations = {
     creating:         'Konto loomine…',
     have_account:     'On juba konto?',
 
-    // Seadmed
     search_devices:   'Otsi seadmeid…',
     filter_status:    'Filtreeri oleku järgi',
     filter_category:  'Filtreeri kategooria järgi',
@@ -74,7 +68,6 @@ const translations = {
     send_notification:'Saada teavitus',
     notification_sent:'Teavitus saadetud',
 
-    // Laenuta / Tagasta
     scan_barcode:     'Skanni vöökood või sisesta käsitsi',
     enter_barcode:    'Sisesta seadme vöökood',
     lookup:           'Otsi',
@@ -89,7 +82,6 @@ const translations = {
     select_student:   'Vali õpilane…',
     return_time:      'Tagastamise kellaaeg',
 
-    // Laenutused
     all_users:        'Kõik kasutajad',
     overdue:          'Tähtaeg ületatud',
     active:           'Aktiivne',
@@ -99,7 +91,6 @@ const translations = {
     mark_returned:    'Märgi tagastatuks',
     change_due_date:  'Muuda tähtaega',
 
-    // Admin
     add_device:       'Lisa seade',
     edit:             'Muuda',
     delete:           'Kustuta',
@@ -110,30 +101,28 @@ const translations = {
     admin:            'Admin',
     student:          'Õpilane',
 
-    // Õpilased
-    add_student:          'Lisa õpilane',
-    import_students:      'Impordi õpilased',
-    student_list:         'Õpilaste nimekiri',
-    group:                'Rühm',
-    delete_group:         'Kustuta rühm',
-    borrowing_history:    'Laenutuste ajalugu',
-    no_students:          'Õpilasi ei leitud.',
-    student_added:        'Õpilane lisatud.',
-    student_updated:      'Õpilane uuendatud.',
-    student_deleted:      'Õpilane kustutatud.',
-    confirm_delete_student: 'Kas oled kindel, et soovid selle õpilase kustutada?',
-    confirm_delete_group: 'Kas oled kindel, et soovid kustutada kõik õpilased rühmast',
+    add_student:               'Lisa õpilane',
+    import_students:           'Impordi õpilased',
+    student_list:              'Õpilaste nimekiri',
+    group:                     'Rühm',
+    delete_group:              'Kustuta rühm',
+    borrowing_history:         'Laenutuste ajalugu',
+    no_students:               'Õpilasi ei leitud.',
+    student_added:             'Õpilane lisatud.',
+    student_updated:           'Õpilane uuendatud.',
+    student_deleted:           'Õpilane kustutatud.',
+    confirm_delete_student:    'Kas oled kindel, et soovid selle õpilase kustutada?',
+    confirm_delete_group:      'Kas oled kindel, et soovid kustutada kõik õpilased rühmast',
     active_borrowings_warning: 'Sellel õpilasel on veel aktiivseid laenutusi!',
-    import_help:          'Lisa üks rida kohta: Nimi, E-post, Rühm (rühm on valikuline)',
-    import_success:       'Imporditud',
-    import_skipped:       'vahele jäetud (duplikaadid)',
-    total_borrowings:     'Laenutusi kokku',
-    returned_late:        'Tagastatud hilinenult',
-    currently_out:        'Praegu väljas',
-    close:                'Sulge',
-    back:                 'Tagasi',
+    import_help:               'Lisa üks rida kohta: Nimi, E-post, Rühm (rühm on valikuline)',
+    import_success:            'Imporditud',
+    import_skipped:            'vahele jäetud (duplikaadid)',
+    total_borrowings:          'Laenutusi kokku',
+    returned_late:             'Tagastatud hilinenult',
+    currently_out:             'Praegu väljas',
+    close:                     'Sulge',
+    back:                      'Tagasi',
 
-    // Oleku märgised
     status_available:   'Saadaval',
     status_borrowed:    'Laenutatud',
     status_maintenance: 'Hoolduses',
@@ -141,18 +130,148 @@ const translations = {
     status_returned:    'Tagastatud',
     status_active:      'Aktiivne',
 
-    loanable_devices:   'Laenutatavad seadmed',
-      not_for_loan:       'Mitte laenuks',
-      export_csv:         'Ekspordi CSV',
-      filter_capacity:    'Filtreeri mahu järgi',
+    loanable_devices: 'Laenutatavad seadmed',
+    not_for_loan:     'Mitte laenuks',
+    export_csv:       'Ekspordi CSV',
+    filter_capacity:  'Filtreeri mahu järgi',
+  },
+
+  en: {
+    nav_dashboard:   'Dashboard',
+    nav_devices:     'Devices',
+    nav_borrow:      'Borrow / Return',
+    nav_borrowings:  'Borrowings',
+    nav_admin:       'Admin Panel',
+    nav_students:    'Students',
+    nav_signout:     'Sign out',
+
+    title_dashboard:  'Dashboard',
+    title_devices:    'Device Inventory',
+    title_borrow:     'Borrow / Return Device',
+    title_borrowings: 'Borrowing History',
+    title_admin:      'Admin Panel',
+    title_system:     'Equipment System',
+    title_students:   'Student List',
+
+    welcome_back:     'Welcome back',
+    admin_desc:       'Admin dashboard — manage devices and track borrowings.',
+    student_desc:     'Browse devices and borrowing information.',
+    stat_total:       'Total devices',
+    stat_available:   'Available',
+    stat_borrowed:    'Borrowed',
+    stat_overdue:     'Overdue',
+    active_borrowings:'Active borrowings',
+    my_borrowings:    'My current borrowings',
+    view_all:         'View all',
+    no_borrowings:    'No active borrowings.',
+    device:           'Device',
+    borrowed_by:      'Borrowed by',
+    due_date:         'Due date',
+    due_time:         'Return time',
+    status:           'Status',
+
+    sign_in:          'Sign in',
+    sign_in_account:  'Sign in to your account',
+    email:            'Email address',
+    password:         'Password',
+    signing_in:       'Signing in…',
+    no_account:       'No account?',
+    register:         'Register',
+    demo_credentials: 'Demo credentials',
+
+    create_account:   'Create account',
+    join_system:      'Join the equipment system',
+    full_name:        'Full name',
+    confirm_password: 'Confirm password',
+    creating:         'Creating account…',
+    have_account:     'Already have an account?',
+
+    search_devices:   'Search devices…',
+    filter_status:    'Filter by status',
+    filter_category:  'Filter by category',
+    all_statuses:     'All statuses',
+    all_categories:   'All categories',
+    available:        'Available',
+    borrowed:         'Borrowed',
+    maintenance:      'Maintenance',
+    no_devices:       'No devices found.',
+    borrow:           'Borrow',
+    return:           'Return',
+    category:         'Category',
+    serial:           'Serial number',
+    send_notification:'Send notification',
+    notification_sent:'Notification sent',
+
+    scan_barcode:     'Scan barcode or enter manually',
+    enter_barcode:    'Enter device barcode',
+    lookup:           'Look up',
+    device_info:      'Device info',
+    name:             'Name',
+    borrow_device:    'Borrow device',
+    return_device:    'Return device',
+    confirm_borrow:   'Confirm borrowing',
+    confirm_return:   'Confirm return',
+    student_name:     'Student name',
+    student_email:    'Student email',
+    select_student:   'Select student…',
+    return_time:      'Return time',
+
+    all_users:        'All users',
+    overdue:          'Overdue',
+    active:           'Active',
+    returned:         'Returned',
+    return_date:      'Return date',
+    actions:          'Actions',
+    mark_returned:    'Mark as returned',
+    change_due_date:  'Change due date',
+
+    add_device:       'Add device',
+    edit:             'Edit',
+    delete:           'Delete',
+    save:             'Save',
+    cancel:           'Cancel',
+    users:            'Users',
+    role:             'Role',
+    admin:            'Admin',
+    student:          'Student',
+
+    add_student:               'Add student',
+    import_students:           'Import students',
+    student_list:              'Student list',
+    group:                     'Group',
+    delete_group:              'Delete group',
+    borrowing_history:         'Borrowing history',
+    no_students:               'No students found.',
+    student_added:             'Student added.',
+    student_updated:           'Student updated.',
+    student_deleted:           'Student deleted.',
+    confirm_delete_student:    'Are you sure you want to delete this student?',
+    confirm_delete_group:      'Are you sure you want to delete all students from group',
+    active_borrowings_warning: 'This student still has active borrowings!',
+    import_help:               'Add one per line: Name, Email, Group (group is optional)',
+    import_success:            'Imported',
+    import_skipped:            'skipped (duplicates)',
+    total_borrowings:          'Total borrowings',
+    returned_late:             'Returned late',
+    currently_out:             'Currently out',
+    close:                     'Close',
+    back:                      'Back',
+
+    status_available:   'Available',
+    status_borrowed:    'Borrowed',
+    status_maintenance: 'Maintenance',
+    status_overdue:     'Overdue',
+    status_returned:    'Returned',
+    status_active:      'Active',
+
+    loanable_devices: 'Loanable devices',
+    not_for_loan:     'Not for loan',
+    export_csv:       'Export CSV',
+    filter_capacity:  'Filter by capacity',
   },
 }
 
-// English fallback = same keys
-translations.en = { ...translations.et }
-
 export const useI18nStore = defineStore('i18n', () => {
-  // Default: Estonian
   const locale = ref(localStorage.getItem('locale') || 'et')
 
   function setLocale(lang) {

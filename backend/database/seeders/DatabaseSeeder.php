@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use App\Models\Device;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -13,6 +14,16 @@ class DatabaseSeeder extends Seeder
     {
         User::firstOrCreate(['email' => 'admin@school.edu'],   ['name' => 'Admin Teacher', 'password' => Hash::make('password'), 'role' => 'admin']);
         User::firstOrCreate(['email' => 'student@school.edu'], ['name' => 'John Student',  'password' => Hash::make('password'), 'role' => 'student']);
+
+        $categoryNames = [
+            'Kaamerad', 'Mälukaardid', 'Statiivid', 'Akud', 'Akulaadijad',
+            'Objektiivid', 'Kotid', 'Sülearvuti', 'Digilaud', 'Graafikalaud',
+            'Stuudiovälgud', 'Valgustid (video)', 'Välgud (kaamera)', 'Filtrid',
+        ];
+
+        foreach ($categoryNames as $name) {
+            Category::firstOrCreate(['name' => $name]);
+        }
 
         $devices = [
             ['name' => 'Canon 700D', 'serial_number' => 'CAM-F-001', 'barcode' => '1001001001001', 'category' => 'Kaamerad'],
@@ -71,6 +82,6 @@ class DatabaseSeeder extends Seeder
                 ['serial_number' => $data['serial_number']],
                 array_merge($data, ['status' => 'available', 'description' => 'School equipment available for borrowing.'])
             );
-}
+        }
     }
 }

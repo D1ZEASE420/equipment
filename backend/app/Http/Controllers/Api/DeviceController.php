@@ -140,12 +140,12 @@ class DeviceController extends Controller
 
     public function categories(): JsonResponse
     {
-        $cats = Device::whereNotNull('category')
-            ->distinct()
-            ->orderBy('category')
-            ->pluck('category');
-
-        return response()->json($cats);
+        $fromDevices = Device::whereNotNull('category')
+            ->distinct()->pluck('category')->toArray();
+        $fromTable = \App\Models\Category::pluck('name')->toArray();
+        $merged = array_values(array_unique(array_merge($fromDevices, $fromTable)));
+        sort($merged);
+        return response()->json($merged);
     }
 
     public function capacities(): JsonResponse

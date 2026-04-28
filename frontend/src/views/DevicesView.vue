@@ -282,7 +282,7 @@ async function sendNotification(device) {
     await borrowingsApi.notify(device.borrowing.id)
     showToast(i18n.t('notification_sent') + ': ' + device.borrowing.student_name)
   } catch (e) {
-    showToast('Viga: ' + (e.response?.data?.message || 'Teavituse saatmine ebaõnnestus'))
+    showToast((e.response?.data?.message || 'Teavituse saatmine ebaõnnestus'))
   } finally {
     notifyingId.value = null
   }

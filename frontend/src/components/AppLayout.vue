@@ -105,13 +105,10 @@
           <!-- Language toggle -->
           <button
             @click="i18n.toggleLocale()"
-            class="flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden transition-all hover:ring-2 hover:ring-primary-500 hover:ring-offset-1"
+            class="flex h-9 items-center justify-center rounded-lg px-2.5 text-xs font-bold transition-all hover:ring-2 hover:ring-primary-500 hover:ring-offset-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
             :title="i18n.isEstonian ? 'Switch to English' : 'Vaheta eesti keelele'"
           >
-            <!-- Estonian flag (shown when language is EN — click to switch to ET) -->
-            <span v-if="!i18n.isEstonian" class="text-xl leading-none" title="Eesti keel">🇪🇪</span>
-            <!-- UK flag (shown when language is ET — click to switch to EN) -->
-            <span v-else class="text-xl leading-none" title="English">🇬🇧</span>
+            {{ i18n.isEstonian ? 'ENG' : 'EST' }}
           </button>
         </div>
       </header>

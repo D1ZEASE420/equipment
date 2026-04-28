@@ -163,7 +163,7 @@ class BorrowingController extends Controller
         return response()->json(['message' => 'Tagastamise tähtaeg uuendatud.', 'borrowing' => $borrowing]);
     }
 
-    // POST /borrowings/{id}/notify — send notification to student
+        // POST /borrowings/{id}/notify — send notification to student
     public function notify(Request $request, Borrowing $borrowing): JsonResponse
     {
         if (!$borrowing->student_email) {
@@ -173,20 +173,26 @@ class BorrowingController extends Controller
         $deviceName = $borrowing->device?->name ?? 'seade';
         $dueDate    = Carbon::parse($borrowing->due_date)->format('d.m.Y');
         $dueTime    = $borrowing->due_time ?? '08:30';
+        $isOverdue  = Carbon::parse($borrowing->due_date)->isPast();
 
-        // Simple mail send (uses Laravel's default mail config)
+        if ($isOverdue) {
+            $subject = "Hilinenud tagastus: \"{$deviceName}\"";
+            $body    = "Tere {$borrowing->student_name},\n\nSinu laenutatud seade \"{$deviceName}\" oleks pidanud olema tagastatud {$dueDate} kell {$dueTime}.\n\nPalun too seade esimesel võimalusel tagasi.\n\nDisainimajakas";
+        } else {
+            $subject = "Meeldetuletus: tagasta seade \"{$deviceName}\"";
+            $body    = "Tere {$borrowing->student_name},\n\nMeeldetuletus: palun too laenutatud seade \"{$deviceName}\" tagasi hiljemalt {$dueDate} kell {$dueTime}.\n\nDisainimajakas";
+        }
+
         try {
-            Mail::raw(
-                "Tere {$borrowing->student_name},\n\nPalun too laenutatud seade \"{$deviceName}\" tagasi hiljemalt {$dueDate} kell {$dueTime}.\n\nTäname!",
-                function ($message) use ($borrowing, $deviceName) {
-                    $message->to($borrowing->student_email, $borrowing->student_name)
-                            ->subject("Meeldetuletus: tagasta seade \"{$deviceName}\"");
-                }
-            );
+            Mail::raw($body, function ($message) use ($borrowing, $subject) {
+                $message->to($borrowing->student_email, $borrowing->student_name)
+                        ->subject($subject)
+                        ->from(config('mail.from.address'), 'Disainimajakas');
+            });
             $borrowing->update(['notification_sent' => true]);
             return response()->json(['message' => 'Teavitus saadetud.']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Teavituse saatmine ebaõnnestus: ' . $e->getMessage()], 500);
         }
     }
-}
+}    

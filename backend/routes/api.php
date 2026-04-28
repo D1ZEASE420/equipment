@@ -22,6 +22,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/devices',          [DeviceController::class, 'index']);
     Route::get('/devices/{device}', [DeviceController::class, 'show']);
 
+    // Categories — all authenticated users can read
+    Route::get('/categories', [CategoryController::class, 'index']);
+
     // Borrowings — students see own, admin sees all
     Route::get('/borrowings', [BorrowingController::class, 'index']);
 
@@ -44,7 +47,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/borrowings/{borrowing}/notify',    [BorrowingController::class, 'notify']);
 
         // Category management
-        Route::get('/categories',              [CategoryController::class, 'index']);
         Route::post('/categories',             [CategoryController::class, 'store']);
         Route::put('/categories/{category}',   [CategoryController::class, 'update']);
         Route::delete('/categories/{category}',[CategoryController::class, 'destroy']);

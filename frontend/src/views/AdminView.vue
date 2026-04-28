@@ -132,7 +132,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-lg font-bold text-gray-900 dark:text-white">Kategooriad</h2>
-          <p class="text-sm text-gray-400">{{ existingCategories.length }} kategooriat</p>
+          <p class="text-sm text-gray-400">{{ categoryObjects.length }} kategooriat</p>
         </div>
       </div>
 
@@ -146,7 +146,7 @@
             placeholder="nt. Kaamerad"
             @keyup.enter="addCategory"
           />
-          <button class="btn-primary" @click="addCategory" :disabled="!newCategory.trim()">
+          <button class="btn-primary" @click="addCategory" :disabled="!newCategory.trim() || categoryAdding">
             Lisa
           </button>
         </div>
@@ -156,21 +156,62 @@
 
       <div class="card overflow-hidden">
         <div class="divide-y divide-gray-50 dark:divide-gray-800">
-          <div v-if="existingCategories.length === 0" class="py-12 text-center text-sm text-gray-400">
+          <div v-if="categoryObjects.length === 0" class="py-12 text-center text-sm text-gray-400">
             Kategooriaid ei ole. Lisa esimene kategooria.
           </div>
           <div
-            v-for="cat in existingCategories"
-            :key="cat"
-            class="flex items-center justify-between px-6 py-3"
+            v-for="cat in categoryObjects"
+            :key="cat.id"
+            class="flex items-center justify-between px-6 py-3 gap-3"
           >
-            <span class="text-sm text-gray-900 dark:text-white">{{ cat }}</span>
-            <span class="text-xs text-gray-400">
-              {{ devices.filter(d => d.category === cat).length }} seadet
-            </span>
+            <template v-if="editingCategoryId === cat.id">
+              <input
+                v-model="editingCategoryName"
+                type="text"
+                class="input-field flex-1 text-sm"
+                @keyup.enter="saveCategory(cat)"
+                @keyup.escape="editingCategoryId = null"
+                ref="editCatInput"
+              />
+              <div class="flex gap-2 shrink-0">
+                <button class="btn-primary text-xs px-3 py-1.5" @click="saveCategory(cat)" :disabled="!editingCategoryName.trim()">Salvesta</button>
+                <button class="btn-secondary text-xs px-3 py-1.5" @click="editingCategoryId = null">Tühista</button>
+              </div>
+            </template>
+            <template v-else>
+              <span class="text-sm text-gray-900 dark:text-white flex-1">{{ cat.name }}</span>
+              <span class="text-xs text-gray-400 shrink-0">
+                {{ devices.filter(d => d.category === cat.name).length }} seadet
+              </span>
+              <div class="flex gap-2 shrink-0">
+                <button class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800" @click="startEditCategory(cat)">Muuda</button>
+                <button class="rounded-lg border border-red-200 dark:border-red-900 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" @click="confirmDeleteCategory(cat)">Kustuta</button>
+              </div>
+            </template>
           </div>
         </div>
       </div>
+
+      <!-- Delete category confirm -->
+      <Teleport to="body">
+        <Transition name="modal">
+          <div v-if="deleteCategoryTarget" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="deleteCategoryTarget = null" />
+            <div class="relative w-full max-w-sm card p-6 shadow-2xl text-center">
+              <h3 class="text-lg font-bold text-gray-900 dark:text-white">Kustuta kategooria?</h3>
+              <p class="mt-2 text-sm text-gray-500"><strong>{{ deleteCategoryTarget.name }}</strong></p>
+              <p class="mt-1 text-xs text-amber-600">Seadmetelt eemaldatakse see kategooria.</p>
+              <div class="mt-5 flex gap-3">
+                <button class="btn-secondary flex-1" @click="deleteCategoryTarget = null">Tühista</button>
+                <button class="btn-danger flex-1" :disabled="deletingCategory" @click="handleDeleteCategory">
+                  <span v-if="deletingCategory" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  {{ deletingCategory ? '…' : 'Kustuta' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
     </template>
 
     <!-- ═══════════════════════════════════════ USERS TAB ═══ -->
@@ -399,10 +440,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useI18nStore } from '@/stores/i18n'
 import { useAuthStore } from '@/stores/auth'
-import { devicesApi } from '@/api/devices'
+import { devicesApi, categoriesApi } from '@/api/devices'
 import api from '@/api/axios'
 
 const i18n = useI18nStore()
@@ -413,7 +454,6 @@ const activeTab = ref('devices')
 // ── Devices ──────────────────────────────────────────────
 const loading         = ref(true)
 const devices         = ref([])
-const existingCategories = ref([])
 const search          = ref('')
 const showModal       = ref(false)
 const editingDevice   = ref(null)
@@ -470,8 +510,7 @@ async function handleSave() {
       const { data } = await devicesApi.create(form.value)
       devices.value.unshift(data)
     }
-    const catRes = await devicesApi.getCategories()
-    existingCategories.value = catRes.data
+    await loadCategories()
     closeModal()
   } catch (e) {
     const errs = e.response?.data?.errors
@@ -512,23 +551,96 @@ async function exportCSV() {
 }
 
 // ── Categories ───────────────────────────────────────────
-const newCategory    = ref('')
-const categoryError   = ref('')
-const categorySuccess = ref('')
+const categoryObjects     = ref([])
+const newCategory         = ref('')
+const categoryError       = ref('')
+const categorySuccess     = ref('')
+const categoryAdding      = ref(false)
+const editingCategoryId   = ref(null)
+const editingCategoryName = ref('')
+const deleteCategoryTarget = ref(null)
+const deletingCategory    = ref(false)
+const editCatInput        = ref(null)
+
+// keep existingCategories in sync for device modal datalist
+const existingCategories = computed(() => categoryObjects.value.map(c => c.name))
+
+async function loadCategories() {
+  try {
+    const { data } = await categoriesApi.getAll()
+    // data is array of strings from /devices/categories; fetch full objects from /categories
+    const { data: objs } = await api.get('/categories')
+    categoryObjects.value = objs
+    // merge any device-only categories (no id) for display
+    const known = new Set(objs.map(c => c.name))
+    data.forEach(name => {
+      if (!known.has(name)) categoryObjects.value.push({ id: 'dev_' + name, name })
+    })
+    categoryObjects.value.sort((a,b) => a.name.localeCompare(b.name))
+  } catch {}
+}
 
 async function addCategory() {
   if (!newCategory.value.trim()) return
   categoryError.value   = ''
   categorySuccess.value = ''
   const cat = newCategory.value.trim()
-  if (existingCategories.value.includes(cat)) {
+  if (categoryObjects.value.some(c => c.name === cat)) {
     categoryError.value = 'See kategooria on juba olemas.'
     return
   }
-  existingCategories.value = [...existingCategories.value, cat].sort()
-  categorySuccess.value = `Kategooria "${cat}" lisatud.`
-  newCategory.value = ''
-  setTimeout(() => { categorySuccess.value = '' }, 3000)
+  categoryAdding.value = true
+  try {
+    const { data } = await categoriesApi.create(cat)
+    categoryObjects.value.push(data)
+    categoryObjects.value.sort((a,b) => a.name.localeCompare(b.name))
+    categorySuccess.value = `Kategooria "${cat}" lisatud.`
+    newCategory.value = ''
+    setTimeout(() => { categorySuccess.value = '' }, 3000)
+  } catch (e) {
+    categoryError.value = e.response?.data?.message || 'Lisamine ebaõnnestus.'
+  } finally {
+    categoryAdding.value = false
+  }
+}
+
+function startEditCategory(cat) {
+  editingCategoryId.value   = cat.id
+  editingCategoryName.value = cat.name
+  nextTick(() => editCatInput.value?.focus?.())
+}
+
+async function saveCategory(cat) {
+  if (!editingCategoryName.value.trim()) return
+  try {
+    const { data } = await categoriesApi.update(cat.id, editingCategoryName.value.trim())
+    const idx = categoryObjects.value.findIndex(c => c.id === cat.id)
+    if (idx !== -1) categoryObjects.value[idx] = data
+    categoryObjects.value.sort((a,b) => a.name.localeCompare(b.name))
+    // update devices list too
+    devices.value.forEach(d => { if (d.category === cat.name) d.category = data.name })
+    editingCategoryId.value = null
+  } catch (e) {
+    alert(e.response?.data?.message || 'Muutmine ebaõnnestus.')
+  }
+}
+
+function confirmDeleteCategory(cat) { deleteCategoryTarget.value = cat }
+
+async function handleDeleteCategory() {
+  if (!deleteCategoryTarget.value) return
+  deletingCategory.value = true
+  try {
+    await categoriesApi.remove(deleteCategoryTarget.value.id)
+    const name = deleteCategoryTarget.value.name
+    categoryObjects.value = categoryObjects.value.filter(c => c.id !== deleteCategoryTarget.value.id)
+    devices.value.forEach(d => { if (d.category === name) d.category = null })
+    deleteCategoryTarget.value = null
+  } catch (e) {
+    alert(e.response?.data?.message || 'Kustutamine ebaõnnestus.')
+  } finally {
+    deletingCategory.value = false
+  }
 }
 
 // ── Users ────────────────────────────────────────────────
@@ -614,12 +726,11 @@ async function handleDeleteUser() {
 
 onMounted(async () => {
   try {
-    const [devRes, catRes] = await Promise.all([
+    const [devRes] = await Promise.all([
       devicesApi.getAll(),
-      devicesApi.getCategories(),
     ])
-    devices.value            = devRes.data
-    existingCategories.value = catRes.data
+    devices.value = devRes.data
+    await loadCategories()
   } finally {
     loading.value = false
   }

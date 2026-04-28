@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Devices
     Route::get('/devices',          [DeviceController::class, 'index']);
+    Route::get('/devices/export',   [DeviceController::class, 'export']);
     Route::get('/devices/{device}', [DeviceController::class, 'show']);
 
     // Borrowings
@@ -32,18 +33,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin-only routes
     Route::middleware('admin')->group(function () {
-        // CSV export
-        Route::get('/devices/export', [DeviceController::class, 'export']);
-
         // Device management
         Route::post('/devices',            [DeviceController::class, 'store']);
         Route::put('/devices/{device}',    [DeviceController::class, 'update']);
         Route::delete('/devices/{device}', [DeviceController::class, 'destroy']);
 
         // Category management
-        Route::post('/categories',             [CategoryController::class, 'store']);
-        Route::put('/categories/{category}',   [CategoryController::class, 'update']);
-        Route::delete('/categories/{category}',[CategoryController::class, 'destroy']);
+        Route::post('/categories',              [CategoryController::class, 'store']);
+        Route::put('/categories/{category}',    [CategoryController::class, 'update']);
+        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
         // Borrowing management
         Route::patch('/borrowings/{borrowing}/due-date', [BorrowingController::class, 'updateDueDate']);

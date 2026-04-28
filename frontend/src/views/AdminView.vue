@@ -567,15 +567,8 @@ const existingCategories = computed(() => categoryObjects.value.map(c => c.name)
 
 async function loadCategories() {
   try {
-    const { data } = await categoriesApi.getAll()
-    // data is array of strings from /devices/categories; fetch full objects from /categories
-    const { data: objs } = await api.get('/categories')
-    categoryObjects.value = objs
-    // merge any device-only categories (no id) for display
-    const known = new Set(objs.map(c => c.name))
-    data.forEach(name => {
-      if (!known.has(name)) categoryObjects.value.push({ id: 'dev_' + name, name })
-    })
+    const { data } = await api.get('/categories')
+    categoryObjects.value = data
     categoryObjects.value.sort((a,b) => a.name.localeCompare(b.name))
   } catch {}
 }

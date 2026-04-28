@@ -59,10 +59,7 @@
           </div>
         </div>
 
-        <p class="mt-6 text-center text-sm text-gray-500">
-          Don't have an account?
-          <RouterLink to="/register" class="font-medium text-primary-600 hover:text-primary-700">Register</RouterLink>
-        </p>
+
       </div>
     </div>
   </div>

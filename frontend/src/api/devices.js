@@ -11,7 +11,7 @@ export const devicesApi = {
 
   exportCSV() {
     // Opens CSV download directly in the browser
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('auth_token')
     const base  = import.meta.env.VITE_API_URL || '/api'
     const a     = document.createElement('a')
     a.href      = `${base}/devices/export`

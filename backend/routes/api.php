@@ -7,26 +7,28 @@ use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\StudentController;
 use Illuminate\Support\Facades\Route;
 
-// Public: login only
+// Public
 Route::post('/login', [AuthController::class, 'login']);
 
-// Public device filters
+// Public device filters (used by DevicesView before login too)
 Route::get('/devices/categories', [DeviceController::class, 'categories']);
 Route::get('/devices/capacities', [DeviceController::class, 'capacities']);
+
+// Public categories list (used by AdminView)
+Route::get('/categories', [CategoryController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me',      [AuthController::class, 'me']);
 
-    // Devices — all authenticated users can browse
+    // Devices
     Route::get('/devices',          [DeviceController::class, 'index']);
     Route::get('/devices/{device}', [DeviceController::class, 'show']);
 
-    // Categories — all authenticated users can read
-    Route::get('/categories', [CategoryController::class, 'index']);
-
-    // Borrowings — students see own, admin sees all
+    // Borrowings
     Route::get('/borrowings', [BorrowingController::class, 'index']);
+    Route::post('/borrow',    [BorrowingController::class, 'borrow']);
+    Route::post('/return',    [BorrowingController::class, 'returnDevice']);
 
     // Admin-only routes
     Route::middleware('admin')->group(function () {
@@ -38,24 +40,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/devices/{device}',    [DeviceController::class, 'update']);
         Route::delete('/devices/{device}', [DeviceController::class, 'destroy']);
 
-        // Borrow / return
-        Route::post('/borrow',  [BorrowingController::class, 'borrow']);
-        Route::post('/return',  [BorrowingController::class, 'returnDevice']);
-
-        // Borrowing management
-        Route::patch('/borrowings/{borrowing}/due-date', [BorrowingController::class, 'updateDueDate']);
-        Route::post('/borrowings/{borrowing}/notify',    [BorrowingController::class, 'notify']);
-
         // Category management
         Route::post('/categories',             [CategoryController::class, 'store']);
         Route::put('/categories/{category}',   [CategoryController::class, 'update']);
         Route::delete('/categories/{category}',[CategoryController::class, 'destroy']);
 
-        // User account management
-        Route::post('/register',           [AuthController::class, 'register']);
-        Route::get('/users',               [AuthController::class, 'users']);
-        Route::put('/users/{user}',        [AuthController::class, 'updateUser']);
-        Route::delete('/users/{user}',     [AuthController::class, 'deleteUser']);
+        // Borrowing management
+        Route::patch('/borrowings/{borrowing}/due-date', [BorrowingController::class, 'updateDueDate']);
+        Route::post('/borrowings/{borrowing}/notify',    [BorrowingController::class, 'notify']);
+
+        // User management
+        Route::post('/register',       [AuthController::class, 'register']);
+        Route::get('/users',           [AuthController::class, 'users']);
+        Route::put('/users/{user}',    [AuthController::class, 'updateUser']);
+        Route::delete('/users/{user}', [AuthController::class, 'deleteUser']);
 
         // Student list management
         Route::get('/students',                      [StudentController::class, 'index']);

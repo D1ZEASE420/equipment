@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BorrowingController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\StudentController;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,12 @@ Route::middleware('auth:sanctum')->group(function () {
         // Borrowing management
         Route::patch('/borrowings/{borrowing}/due-date', [BorrowingController::class, 'updateDueDate']);
         Route::post('/borrowings/{borrowing}/notify',    [BorrowingController::class, 'notify']);
+
+        // Category management
+        Route::get('/categories',              [CategoryController::class, 'index']);
+        Route::post('/categories',             [CategoryController::class, 'store']);
+        Route::put('/categories/{category}',   [CategoryController::class, 'update']);
+        Route::delete('/categories/{category}',[CategoryController::class, 'destroy']);
 
         // User account management
         Route::post('/register',           [AuthController::class, 'register']);

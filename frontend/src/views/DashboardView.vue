@@ -1,16 +1,13 @@
 <template>
   <div class="space-y-6">
     <!-- Welcome banner -->
-    <div class="rounded-xl bg-gradient-to-r from-primary-600 to-primary-800 p-6 text-white">
-      <h2 class="text-xl font-bold flex items-center gap-2">
-        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <div class="rounded-xl bg-gradient-to-r from-primary-600 to-primary-800 px-6 py-4 text-white">
+      <h2 class="text-lg font-bold flex items-center gap-2">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
         </svg>
         {{ i18n.t('welcome_back') }}, {{ auth.user?.name }}!
       </h2>
-      <p class="mt-1 text-primary-100 text-sm">
-        {{ auth.isAdmin ? i18n.t('admin_desc') : i18n.t('student_desc') }}
-      </p>
     </div>
 
     <!-- Stats grid -->
@@ -77,9 +74,9 @@
 
       <div v-else class="divide-y divide-gray-50 dark:divide-gray-800">
         <div
-          v-for="b in activeBorrowings.slice(0, 6)"
+          v-for="b in activeBorrowings"
           :key="b.id"
-          class="flex items-center gap-4 px-6 py-4"
+          class="flex items-center gap-4 px-6 py-3"
         >
           <div
             class="h-2.5 w-2.5 rounded-full shrink-0"

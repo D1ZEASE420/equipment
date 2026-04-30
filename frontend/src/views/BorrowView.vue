@@ -52,16 +52,19 @@
         {{ mode === 'borrow' ? i18n.t('borrow_device') : i18n.t('return_device') }}
       </h2>
 
-      <!-- Device identifier -->
+      <!-- Device identifier with scanner (admin only) -->
       <div>
         <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('enter_barcode') }}</label>
-        <input
-          v-model="identifier"
-          type="text"
-          class="input-field font-mono"
-          placeholder="nt. 1001001001001 või MBP-2024-001"
-          :disabled="submitting"
-        />
+        <div class="flex gap-2 items-stretch">
+          <input
+            v-model="identifier"
+            type="text"
+            class="input-field font-mono flex-1"
+            placeholder="nt. 1001001001001 või MBP-2024-001"
+            :disabled="submitting"
+          />
+          <BarcodeScanner v-if="isAdmin" @detected="identifier = $event" />
+        </div>
       </div>
 
       <!-- Borrow-only fields -->
@@ -175,6 +178,7 @@ import { useI18nStore } from '@/stores/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { borrowingsApi } from '@/api/borrowings'
 import { studentsApi } from '@/api/students'
+import BarcodeScanner from '@/components/BarcodeScanner.vue'
 
 const route   = useRoute()
 const i18n    = useI18nStore()

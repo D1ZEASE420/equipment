@@ -105,10 +105,13 @@
           <!-- Language toggle -->
           <button
             @click="i18n.toggleLocale()"
-            class="flex h-9 items-center justify-center rounded-lg px-2.5 text-xs font-bold transition-all hover:ring-2 hover:ring-primary-500 hover:ring-offset-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+            class="flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden transition-all hover:ring-2 hover:ring-primary-500 hover:ring-offset-1"
             :title="i18n.isEstonian ? 'Switch to English' : 'Vaheta eesti keelele'"
           >
-            {{ i18n.isEstonian ? 'ENG' : 'EST' }}
+            <!-- Estonian flag (shown when language is EN — click to switch to ET) -->
+            <span v-if="!i18n.isEstonian" class="text-xl leading-none" title="Eesti keel">🇪🇪</span>
+            <!-- UK flag (shown when language is ET — click to switch to EN) -->
+            <span v-else class="text-xl leading-none" title="English">🇬🇧</span>
           </button>
         </div>
       </header>
@@ -158,6 +161,11 @@ const IconList = {
     h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' })
   ])
 }
+const IconStudents = {
+  render: () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' })
+  ])
+}
 const IconAdmin = {
   render: () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
     h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' }),
@@ -177,7 +185,7 @@ const allNavItems = computed(() => [
   { to: '/devices',    label: i18n.t('nav_devices'),   icon: IconDevices,   admin: false },
   { to: '/borrow',     label: i18n.t('nav_borrow'),    icon: IconBarcode,   admin: true  },
   { to: '/borrowings', label: i18n.t('nav_borrowings'),icon: IconList,      admin: false },
-  { to: '/students',   label: i18n.t('nav_students'),  icon: IconAdmin,     admin: true  },
+  { to: '/students',   label: i18n.t('nav_students'),  icon: IconStudents,  admin: true  },
   { to: '/admin',      label: i18n.t('nav_admin'),     icon: IconAdmin,     admin: true  },
 ])
 

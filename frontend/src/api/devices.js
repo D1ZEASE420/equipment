@@ -9,18 +9,19 @@ export const devicesApi = {
   update:       (id, data)    => api.put(`/devices/${id}`, data),
   remove:       (id)          => api.delete(`/devices/${id}`),
 
-  exportCSV() {
-    // Opens CSV download directly in the browser
-    const token = localStorage.getItem('auth_token')
-    const base  = import.meta.env.VITE_API_URL || '/api'
-    const a     = document.createElement('a')
-    a.href      = `${base}/devices/export`
-    // attach token via query param since we can't set headers on anchor tags
-    a.href     += `?token=${encodeURIComponent(token)}`
-    a.download  = 'seadmed.csv'
-    a.click()
+  async exportCSV() {
+    const response = await api.get('/devices/export', { responseType: 'blob' })
+    const url  = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href  = url
+    link.setAttribute('download', 'seadmed.csv')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
   },
 }
+
 export const categoriesApi = {
   getAll:  ()           => api.get('/categories'),
   create:  (name)       => api.post('/categories', { name }),

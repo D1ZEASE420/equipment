@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Borrowing;
+use App\Models\Device;
 use App\Models\Student;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,7 +41,6 @@ class StudentController extends Controller
         ]);
 
         $student = Student::create($data);
-
         return response()->json($student, 201);
     }
 
@@ -55,28 +55,37 @@ class StudentController extends Controller
         ]);
 
         $student->update($data);
-
         return response()->json($student);
     }
 
-    // DELETE /students/{id} — delete one student
-public function destroy(Student $student): JsonResponse
-{
-    // Hard backend check: block delete if student has active borrowings
-    $activeBorrowings = Borrowing::where('student_email', $student->email)
-        ->whereNull('returned_at')
-        ->count();
+    // DELETE /students/{id} — delete one student + their borrowing history
+    public function destroy(Student $student): JsonResponse
+    {
+        $activeBorrowings = Borrowing::where('student_email', $student->email)
+            ->whereNull('returned_at')
+            ->count();
 
-    if ($activeBorrowings > 0) {
-        return response()->json([
-            'message'         => "Õpilasel on {$activeBorrowings} aktiivne laenatus. Kustutamine blokeeritud.",
-            'active_count'    => $activeBorrowings,
-        ], 422);
+        if ($activeBorrowings > 0) {
+            return response()->json([
+                'message'      => "Õpilasel on {$activeBorrowings} aktiivne laenatus. Kustutamine blokeeritud.",
+                'active_count' => $activeBorrowings,
+            ], 422);
+        }
+
+        // Return borrowed devices to available before deleting history
+        $borrowings = Borrowing::where('student_email', $student->email)->get();
+        foreach ($borrowings as $borrowing) {
+            if ($borrowing->device && $borrowing->returned_at === null) {
+                $borrowing->device->update(['status' => 'available']);
+            }
+        }
+
+        // Delete borrowing history
+        Borrowing::where('student_email', $student->email)->delete();
+
+        $student->delete();
+        return response()->json(['message' => 'Õpilane ja laenutuste ajalugu kustutatud.']);
     }
-
-    $student->delete();
-    return response()->json(['message' => 'Kustutatud.']);
-}
 
     // POST /students/import — bulk import from JSON array
     public function import(Request $request): JsonResponse
@@ -108,18 +117,40 @@ public function destroy(Student $student): JsonResponse
         return response()->json(['created' => $created, 'skipped' => $skipped]);
     }
 
-    // DELETE /students/group/{group} — delete whole group
+    // DELETE /students/group/{group} — delete whole group + their borrowing history
     public function destroyGroup(string $group): JsonResponse
     {
-        $count = Student::where('group', $group)->count();
+        $students = Student::where('group', $group)->get();
+
+        // Block if any student in group has active borrowings
+        $activeCount = 0;
+        foreach ($students as $student) {
+            $activeCount += Borrowing::where('student_email', $student->email)
+                ->whereNull('returned_at')
+                ->count();
+        }
+
+        if ($activeCount > 0) {
+            return response()->json([
+                'message'      => "Rühmas on {$activeCount} aktiivset laenutust. Kustutamine blokeeritud.",
+                'active_count' => $activeCount,
+            ], 422);
+        }
+
+        // Delete borrowing history for all students in group
+        foreach ($students as $student) {
+            Borrowing::where('student_email', $student->email)->delete();
+        }
+
+        $count = $students->count();
         Student::where('group', $group)->delete();
-        return response()->json(['message' => "Kustutati {$count} õpilast rühmast '{$group}'."]);
+
+        return response()->json(['message' => "Kustutati {$count} õpilast rühmast '{$group}' koos laenutuste ajalooga."]);
     }
 
     // GET /students/{id}/borrowings — borrowing history for a specific student
     public function borrowingHistory(Student $student): JsonResponse
     {
-        // Match by student_email stored on borrowings (set when borrowing was created)
         $borrowings = Borrowing::with(['device', 'user'])
             ->where('student_email', $student->email)
             ->orderByDesc('borrowed_at')
@@ -143,18 +174,17 @@ public function destroy(Student $student): JsonResponse
                 ];
             });
 
-        // Summary stats
-        $total   = $borrowings->count();
-        $late    = $borrowings->where('was_late', true)->count();
-        $active  = $borrowings->whereNull('returned_at')->count();
+        $total  = $borrowings->count();
+        $late   = $borrowings->where('was_late', true)->count();
+        $active = $borrowings->whereNull('returned_at')->count();
 
         return response()->json([
-            'student'   => $student,
+            'student'    => $student,
             'borrowings' => $borrowings,
-            'stats'     => [
-                'total'          => $total,
-                'returned_late'  => $late,
-                'currently_out'  => $active,
+            'stats'      => [
+                'total'         => $total,
+                'returned_late' => $late,
+                'currently_out' => $active,
             ],
         ]);
     }

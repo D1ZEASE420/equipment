@@ -304,13 +304,21 @@
                   <option v-for="c in existingCategories" :key="c" :value="c" />
                 </datalist>
               </div>
+              <!-- Serial number with scanner -->
               <div>
                 <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('serial') }} *</label>
-                <input v-model="form.serial_number" type="text" required class="input-field font-mono" placeholder="nt. MBP-2024-001" />
+                <div class="flex gap-2 items-stretch">
+                  <input v-model="form.serial_number" type="text" required class="input-field font-mono flex-1" placeholder="nt. MBP-2024-001" />
+                  <BarcodeScanner @detected="form.serial_number = $event" />
+                </div>
               </div>
+              <!-- Barcode with scanner -->
               <div>
                 <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Vöökood *</label>
-                <input v-model="form.barcode" type="text" required class="input-field font-mono" placeholder="nt. 1001001001001" />
+                <div class="flex gap-2 items-stretch">
+                  <input v-model="form.barcode" type="text" required class="input-field font-mono flex-1" placeholder="nt. 1001001001001" />
+                  <BarcodeScanner @detected="form.barcode = $event" />
+                </div>
               </div>
               <div>
                 <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Kirjeldus</label>
@@ -445,6 +453,7 @@ import { useI18nStore } from '@/stores/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { devicesApi, categoriesApi } from '@/api/devices'
 import api from '@/api/axios'
+import BarcodeScanner from '@/components/BarcodeScanner.vue'
 
 const i18n = useI18nStore()
 const auth = useAuthStore()

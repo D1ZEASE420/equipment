@@ -39,7 +39,7 @@
           </template>
         </StatCard>
       </div>
-      <div @click="goToDevices('borrowed')" class="cursor-pointer">
+      <div @click="router.push({ path: '/borrowings', query: { status: 'overdue' } })" class="cursor-pointer">
         <StatCard :label="i18n.t('stat_overdue')" :value="stats.overdue" color="red">
           <template #icon>
             <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">

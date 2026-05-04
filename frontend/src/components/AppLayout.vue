@@ -9,14 +9,11 @@
     >
       <!-- Logo -->
       <div class="flex h-16 shrink-0 items-center gap-3 border-b border-gray-700 dark:border-gray-800 px-6">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600">
-          <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V9l-6-6z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v6h6" />
-          </svg>
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden bg-primary-600">
+          <img src="/favicon-32x32.png" alt="logo" class="h-8 w-8 object-contain" />
         </div>
         <div>
-          <p class="text-sm font-semibold leading-tight">Equipment</p>
+          <p class="text-sm font-semibold leading-tight">Disainimajakas</p>
           <p class="text-xs text-gray-400">{{ i18n.t('title_system') }}</p>
         </div>
       </div>

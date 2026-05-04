@@ -27,7 +27,7 @@
               autocomplete="email"
               required
               class="input-field"
-              placeholder="konto@kool.ee"
+              placeholder="nimi@ametikool.ee"
               :disabled="loading"
             />
           </div>

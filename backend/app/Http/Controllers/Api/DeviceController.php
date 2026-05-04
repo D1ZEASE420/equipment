@@ -83,7 +83,7 @@ class DeviceController extends Controller
             ));
         }
 
-        $csv = implode("\n", $rows);
+        $csv = "\xEF\xBB\xBF" . implode("\n", $rows);
 
         return response($csv, 200, [
             'Content-Type'        => 'text/csv; charset=UTF-8',

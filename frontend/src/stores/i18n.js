@@ -70,6 +70,7 @@ const translations = {
 
     scan_barcode:     'Skanni vöökood või sisesta käsitsi',
     enter_barcode:    'Sisesta seadme vöökood',
+    barcode_placeholder: 'nt. 1001001001001 või MBP-2024-001',
     lookup:           'Otsi',
     device_info:      'Seadme info',
     name:             'Nimi',
@@ -204,6 +205,7 @@ const translations = {
 
     scan_barcode:     'Scan barcode or enter manually',
     enter_barcode:    'Enter device barcode',
+    barcode_placeholder: 'e.g. 1001001001001 or MBP-2024-001',
     lookup:           'Look up',
     device_info:      'Device info',
     name:             'Name',

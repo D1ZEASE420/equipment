@@ -117,8 +117,15 @@
                       <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                   </button>
-
-                  <!-- Edit due date -->
+                  <span
+                    v-else-if="isAdmin && !b.returned_at && !b.student_email && !b.user?.email"
+                    class="rounded-lg p-1.5 text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                    title="Teavitust ei saa saata — e-post puudub"
+                  >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                  </span>                  <!-- Edit due date -->
                   <button
                     v-if="isAdmin && !b.returned_at"
                     @click="startEditDue(b)"
@@ -158,12 +165,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { borrowingsApi } from '@/api/borrowings'
 
 const i18n    = useI18nStore()
 const auth    = useAuthStore()
+const route   = useRoute()
 const isAdmin = computed(() => auth.isAdmin)
 
 const loading      = ref(true)
@@ -185,7 +194,12 @@ function showToast(msg) {
 
 function isOverdue(b) {
   if (b.returned_at) return false
-  return new Date() > new Date(b.due_date)
+  const due = new Date(b.due_date)
+  if (b.due_time) {
+    const [h, m] = b.due_time.split(':').map(Number)
+    due.setHours(h, m, 0, 0)
+  }
+  return new Date() > due
 }
 
 const filtered = computed(() => {
@@ -230,9 +244,14 @@ async function saveDueDate(b) {
 async function markReturned(b) {
   returningId.value = b.id
   try {
-    await borrowingsApi.returnDevice({ identifier: b.device.serial_number })
+    const { data } = await borrowingsApi.returnDevice({ identifier: b.device.serial_number })
     const idx = borrowings.value.findIndex(x => x.id === b.id)
-    if (idx !== -1) borrowings.value[idx].returned_at = new Date().toISOString()
+    if (idx !== -1) {
+      borrowings.value[idx] = {
+        ...borrowings.value[idx],
+        returned_at: data.borrowing?.returned_at || new Date().toISOString(),
+      }
+    }
     showToast('Seade märgitud tagastatuks.')
   } catch (e) {
     showToast('Viga: ' + (e.response?.data?.message || 'Tagastamine ebaõnnestus.'))
@@ -254,6 +273,7 @@ async function sendNotify(b) {
 }
 
 onMounted(async () => {
+  if (route.query.status) statusFilter.value = route.query.status
   try {
     const { data } = await borrowingsApi.getAll()
     borrowings.value = data

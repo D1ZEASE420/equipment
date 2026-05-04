@@ -60,7 +60,7 @@
             v-model="identifier"
             type="text"
             class="input-field font-mono flex-1"
-            placeholder="nt. 1001001001001 või MBP-2024-001"
+            :placeholder="i18n.t('barcode_placeholder')"
             :disabled="submitting"
           />
           <BarcodeScanner v-if="isAdmin" @detected="identifier = $event" />
@@ -109,9 +109,12 @@
             v-model="studentEmail"
             type="email"
             class="input-field"
+            :class="{ 'bg-gray-50 dark:bg-gray-800 opacity-75': selectedStudent }"
             placeholder="opilane@kool.ee"
-            :disabled="submitting"
+            :disabled="submitting || !!selectedStudent"
+            :title="selectedStudent ? 'Email täidetud automaatselt. Muuda nime väljal et tühjendada.' : ''"
           />
+          <p v-if="selectedStudent" class="mt-1 text-xs text-gray-400">Täidetud automaatselt · <button type="button" class="underline hover:text-gray-600" @click="selectedStudent = null; studentEmail = ''">muuda</button></p>
         </div>
 
         <!-- Due date -->
@@ -158,7 +161,7 @@
         @click="handleSubmit"
         class="w-full py-3 text-base font-semibold flex items-center justify-center gap-2 rounded-xl transition-colors"
         :class="mode === 'borrow' ? 'btn-primary' : 'btn-success'"
-        :disabled="submitting || !identifier"
+        :disabled="submitting || !identifier || (mode === 'borrow' && !dueDate)"
       >
         <span v-if="submitting" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
         <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -197,6 +200,7 @@ const feedback     = ref({ type: '', message: '', device: null })
 const students         = ref([])
 const showDropdown     = ref(false)
 const filteredStudents = ref([])
+const selectedStudent  = ref(null)
 
 const timePresets = ['08:30', '10:00', '12:00', '14:00', '16:00']
 
@@ -217,6 +221,7 @@ function resetFeedback() {
 }
 
 function onStudentNameInput() {
+  selectedStudent.value = null
   const q = studentName.value.toLowerCase().trim()
   if (q.length === 0) {
     filteredStudents.value = students.value.slice(0, 8)
@@ -230,6 +235,7 @@ function onStudentNameInput() {
 }
 
 function selectStudent(s) {
+  selectedStudent.value  = s
   studentName.value  = s.name
   studentEmail.value = s.email
   showDropdown.value = false
@@ -249,6 +255,10 @@ async function handleSubmit() {
         feedback.value = { type: 'error', message: 'Palun vali tagastamise kuupäev.' }
         return
       }
+      if (dueDate.value < minDate.value) {
+        feedback.value = { type: 'error', message: 'Tagastamise kuupäev peab olema vähemalt homme.' }
+        return
+      }
       const { data } = await borrowingsApi.borrow({
         identifier:    identifier.value.trim(),
         due_date:      dueDate.value,
@@ -260,6 +270,7 @@ async function handleSubmit() {
       identifier.value = ''
       studentName.value  = ''
       studentEmail.value = ''
+      selectedStudent.value = null
       setDefaultDueDate()
       dueTime.value = '08:30'
     } else {

@@ -32,6 +32,10 @@ class BorrowingController extends Controller
             return response()->json(['message' => 'Seadet ei leitud. Kontrolli vöökood või seerianumber.'], 404);
         }
 
+        if (!$device->loanable) {
+            return response()->json(['message' => 'See seade ei ole laenuks saadaval.'], 422);
+        }
+
         if ($device->isBorrowed()) {
             $activeBorrowing = $device->activeBorrowing()->with('user')->first();
             return response()->json([
@@ -151,7 +155,7 @@ class BorrowingController extends Controller
     public function updateDueDate(Request $request, Borrowing $borrowing): JsonResponse
     {
         $request->validate([
-            'due_date' => ['required', 'date'],
+            'due_date' => ['required', 'date', 'after:yesterday'],
             'due_time' => ['nullable', 'string', 'regex:/^\d{2}:\d{2}$/'],
         ]);
 

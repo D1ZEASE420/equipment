@@ -36,11 +36,23 @@ class Borrowing extends Model
         return $this->belongsTo(Device::class);
     }
 
+    private function effectiveDueDateTime(): Carbon
+    {
+        $due = Carbon::parse($this->due_date)->startOfDay();
+        if ($this->due_time) {
+            [$h, $m] = explode(':', $this->due_time);
+            $due->setHour((int)$h)->setMinute((int)$m)->setSecond(0);
+        } else {
+            $due->endOfDay();
+        }
+        return $due;
+    }
+
     public function getStatusColorAttribute(): string
     {
         if ($this->returned_at) return 'green';
 
-        $due = Carbon::parse($this->due_date);
+        $due = $this->effectiveDueDateTime();
         $now = Carbon::now();
 
         if ($now->greaterThan($due)) return 'red';
@@ -51,6 +63,6 @@ class Borrowing extends Model
 
     public function isOverdue(): bool
     {
-        return !$this->returned_at && Carbon::now()->greaterThan($this->due_date);
+        return !$this->returned_at && Carbon::now()->greaterThan($this->effectiveDueDateTime());
     }
 }

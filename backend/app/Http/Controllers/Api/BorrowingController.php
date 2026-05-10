@@ -12,6 +12,75 @@ use Illuminate\Support\Facades\Mail;
 
 class BorrowingController extends Controller
 {
+    public function borrowBatch(Request $request): JsonResponse
+    {
+        $request->validate([
+            'identifiers'   => ['required', 'array', 'min:1', 'max:20'],
+            'identifiers.*' => ['required', 'string'],
+            'due_date'      => ['required', 'date', 'after:today'],
+            'due_time'      => ['nullable', 'string', 'regex:/^\d{2}:\d{2}$/'],
+            'student_name'  => ['nullable', 'string', 'max:255'],
+            'student_email' => ['nullable', 'email'],
+        ]);
+
+        $results  = [];
+        $errors   = [];
+
+        foreach ($request->identifiers as $identifier) {
+            $identifier = trim($identifier);
+
+            $device = Device::where('barcode', $identifier)
+                            ->orWhere('serial_number', $identifier)
+                            ->first();
+
+            if (!$device) {
+                $errors[] = ['identifier' => $identifier, 'message' => 'Seadet ei leitud.'];
+                continue;
+            }
+
+            if (!$device->loanable) {
+                $errors[] = ['identifier' => $identifier, 'message' => "\"{$device->name}\" ei ole laenuks saadaval."];
+                continue;
+            }
+
+            if ($device->isBorrowed()) {
+                $errors[] = ['identifier' => $identifier, 'message' => "\"{$device->name}\" on juba laenutatud."];
+                continue;
+            }
+
+            $borrowing = Borrowing::create([
+                'user_id'       => $request->user()->id,
+                'device_id'     => $device->id,
+                'borrowed_at'   => Carbon::now(),
+                'due_date'      => Carbon::parse($request->due_date)->endOfDay(),
+                'due_time'      => $request->due_time ?? '08:30',
+                'student_name'  => $request->student_name,
+                'student_email' => $request->student_email,
+            ]);
+
+            $device->update(['status' => 'borrowed']);
+            $borrowing->load('device');
+
+            $results[] = [
+                'id'     => $borrowing->id,
+                'device' => $borrowing->device,
+            ];
+        }
+
+        if (empty($results) && !empty($errors)) {
+            return response()->json([
+                'message' => 'Ükski seade ei laenutatud.',
+                'errors'  => $errors,
+            ], 422);
+        }
+
+        return response()->json([
+            'message'  => count($results) . ' seade(t) edukalt laenutatud.',
+            'borrowed' => $results,
+            'errors'   => $errors,
+        ], 201);
+    }
+
     public function borrow(Request $request): JsonResponse
     {
         $request->validate([

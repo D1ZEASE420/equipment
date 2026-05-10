@@ -29,147 +29,232 @@
     <Transition name="fade">
       <div
         v-if="feedback.message"
-        class="rounded-xl border p-4 flex items-start gap-3"
+        class="rounded-xl border p-4"
         :class="{
           'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 text-emerald-800 dark:text-emerald-300': feedback.type === 'success',
           'bg-red-50 dark:bg-red-900/20 border-red-200 text-red-800 dark:text-red-300':                    feedback.type === 'error',
           'bg-amber-50 dark:bg-amber-900/20 border-amber-200 text-amber-800 dark:text-amber-300':          feedback.type === 'warning',
         }"
       >
-        <div>
-          <p class="font-semibold">{{ feedback.message }}</p>
-          <div v-if="feedback.device" class="mt-2 text-sm">
-            <p>{{ i18n.t('device') }}: <strong>{{ feedback.device.name }}</strong></p>
-            <p class="font-mono text-xs">{{ feedback.device.serial_number }}</p>
+        <p class="font-semibold">{{ feedback.message }}</p>
+        <!-- Batch result details -->
+        <div v-if="feedback.borrowed && feedback.borrowed.length" class="mt-2 space-y-1">
+          <div v-for="b in feedback.borrowed" :key="b.id" class="flex items-center gap-2 text-sm">
+            <svg class="h-4 w-4 shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            {{ b.device.name }} <span class="font-mono text-xs opacity-70">{{ b.device.serial_number }}</span>
+          </div>
+        </div>
+        <div v-if="feedback.errors && feedback.errors.length" class="mt-2 space-y-1">
+          <div v-for="e in feedback.errors" :key="e.identifier" class="flex items-center gap-2 text-sm text-red-700 dark:text-red-400">
+            <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            <span class="font-mono">{{ e.identifier }}</span>: {{ e.message }}
           </div>
         </div>
       </div>
     </Transition>
 
-    <!-- Form card -->
-    <div class="card p-6 space-y-5">
-      <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-        {{ mode === 'borrow' ? i18n.t('borrow_device') : i18n.t('return_device') }}
-      </h2>
+    <!-- ====== BORROW MODE ====== -->
+    <template v-if="mode === 'borrow'">
 
-      <!-- Device identifier with scanner (admin only) -->
-      <div>
-        <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('enter_barcode') }}</label>
-        <div class="flex gap-2 items-stretch">
-          <input
-            v-model="identifier"
-            type="text"
-            class="input-field font-mono flex-1"
-            :placeholder="i18n.t('barcode_placeholder')"
-            :disabled="submitting"
-          />
-          <BarcodeScanner v-if="isAdmin" @detected="identifier = $event" />
-        </div>
-      </div>
+      <!-- Step 1: Add devices to cart -->
+      <div class="card p-6 space-y-4">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">1. Lisa seadmed</h2>
 
-      <!-- Borrow-only fields -->
-      <template v-if="mode === 'borrow'">
-
-        <!-- Student name with autocomplete -->
-        <div class="relative">
-          <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('student_name') }}</label>
-          <input
-            v-model="studentName"
-            type="text"
-            class="input-field"
-            :placeholder="i18n.t('select_student')"
-            :disabled="submitting"
-            autocomplete="off"
-            @input="onStudentNameInput"
-            @blur="hideDropdownDelayed"
-            @focus="onStudentNameInput"
-          />
-          <!-- Autocomplete dropdown -->
-          <div
-            v-if="showDropdown && filteredStudents.length > 0"
-            class="absolute z-50 left-0 right-0 mt-1 max-h-52 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl"
-          >
+        <!-- Barcode input + Add button -->
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('enter_barcode') }}</label>
+          <div class="flex gap-2">
+            <input
+              v-model="identifier"
+              type="text"
+              class="input-field font-mono flex-1"
+              :placeholder="i18n.t('barcode_placeholder')"
+              :disabled="submitting"
+              @keydown.enter.prevent="addToCart"
+            />
+            <BarcodeScanner v-if="isAdmin" @detected="identifier = $event; addToCart()" />
             <button
-              v-for="s in filteredStudents"
-              :key="s.id"
-              type="button"
-              class="w-full text-left px-4 py-2.5 text-sm hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors border-b border-gray-50 dark:border-gray-800 last:border-0"
-              @mousedown.prevent="selectStudent(s)"
+              @click="addToCart"
+              class="btn-primary px-4 rounded-xl flex items-center gap-1.5 text-sm font-semibold shrink-0"
+              :disabled="!identifier.trim() || submitting"
             >
-              <p class="font-semibold text-gray-900 dark:text-white">{{ s.name }}</p>
-              <p class="text-xs text-gray-400">{{ s.email }}<span v-if="s.group" class="ml-2 text-gray-300">{{ s.group }}</span></p>
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+              </svg>
+              Lisa
+            </button>
+          </div>
+          <p v-if="addError" class="mt-1.5 text-xs text-red-500">{{ addError }}</p>
+        </div>
+
+        <!-- Cart list -->
+        <div v-if="cart.length > 0" class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div
+            v-for="(item, idx) in cart"
+            :key="item"
+            class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 dark:border-gray-800 last:border-0 bg-white dark:bg-gray-900"
+          >
+            <svg class="h-4 w-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V9l-6-6z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v6h6"/>
+            </svg>
+            <span class="font-mono text-sm flex-1 text-gray-800 dark:text-gray-200">{{ item }}</span>
+            <button
+              @click="removeFromCart(idx)"
+              class="text-gray-300 hover:text-red-500 transition-colors p-0.5 rounded"
+              title="Eemalda"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
             </button>
           </div>
         </div>
+        <p v-else class="text-sm text-gray-400 text-center py-2">Korv on tühi — skanni või sisesta seadme vöökood/seerianumber</p>
 
-        <!-- Student email (auto-filled) -->
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('student_email') }}</label>
-          <input
-            v-model="studentEmail"
-            type="email"
-            class="input-field"
-            :class="{ 'bg-gray-50 dark:bg-gray-800 opacity-75': selectedStudent }"
-            placeholder="opilane@kool.ee"
-            :disabled="submitting || !!selectedStudent"
-            :title="selectedStudent ? 'Email täidetud automaatselt. Muuda nime väljal et tühjendada.' : ''"
-          />
-          <p v-if="selectedStudent" class="mt-1 text-xs text-gray-400">Täidetud automaatselt · <button type="button" class="underline hover:text-gray-600" @click="selectedStudent = null; studentEmail = ''">muuda</button></p>
-        </div>
+        <p v-if="cart.length > 0" class="text-xs text-gray-400">{{ cart.length }} seade{{ cart.length === 1 ? '' : 't' }} lisatud</p>
+      </div>
 
-        <!-- Due date -->
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('due_date') }}</label>
-          <input
-            v-model="dueDate"
-            type="date"
-            class="input-field"
-            :min="minDate"
-            :disabled="submitting"
-          />
-        </div>
+      <!-- Step 2: Student & date (only shown when cart has items) -->
+      <Transition name="fade">
+        <div v-if="cart.length > 0" class="card p-6 space-y-5">
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">2. Laenutaja ja tähtaeg</h2>
 
-        <!-- Due time -->
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('return_time') }}</label>
-          <div class="flex gap-2 flex-wrap">
-            <button
-              v-for="t in timePresets"
-              :key="t"
-              type="button"
-              @click="dueTime = t"
-              class="rounded-lg px-3 py-1.5 text-sm font-medium border transition-colors"
-              :class="dueTime === t
-                ? 'bg-primary-600 border-primary-600 text-white'
-                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-primary-400'"
-            >
-              {{ t }}
-            </button>
+          <!-- Student name autocomplete -->
+          <div class="relative">
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('student_name') }}</label>
             <input
-              v-model="dueTime"
-              type="time"
-              class="input-field w-32 text-sm"
+              v-model="studentName"
+              type="text"
+              class="input-field"
+              :placeholder="i18n.t('select_student')"
+              :disabled="submitting"
+              autocomplete="off"
+              @input="onStudentNameInput"
+              @blur="hideDropdownDelayed"
+              @focus="onStudentNameInput"
+            />
+            <div
+              v-if="showDropdown && filteredStudents.length > 0"
+              class="absolute z-50 left-0 right-0 mt-1 max-h-52 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl"
+            >
+              <button
+                v-for="s in filteredStudents"
+                :key="s.id"
+                type="button"
+                class="w-full text-left px-4 py-2.5 text-sm hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors border-b border-gray-50 dark:border-gray-800 last:border-0"
+                @mousedown.prevent="selectStudent(s)"
+              >
+                <p class="font-semibold text-gray-900 dark:text-white">{{ s.name }}</p>
+                <p class="text-xs text-gray-400">{{ s.email }}<span v-if="s.group" class="ml-2 text-gray-300">{{ s.group }}</span></p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Student email -->
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('student_email') }}</label>
+            <input
+              v-model="studentEmail"
+              type="email"
+              class="input-field"
+              :class="{ 'bg-gray-50 dark:bg-gray-800 opacity-75': selectedStudent }"
+              placeholder="opilane@kool.ee"
+              :disabled="submitting || !!selectedStudent"
+              :title="selectedStudent ? 'Email täidetud automaatselt. Muuda nime väljal et tühjendada.' : ''"
+            />
+            <p v-if="selectedStudent" class="mt-1 text-xs text-gray-400">
+              Täidetud automaatselt ·
+              <button type="button" class="underline hover:text-gray-600" @click="selectedStudent = null; studentEmail = ''">muuda</button>
+            </p>
+          </div>
+
+          <!-- Due date -->
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('due_date') }}</label>
+            <input
+              v-model="dueDate"
+              type="date"
+              class="input-field"
+              :min="minDate"
               :disabled="submitting"
             />
           </div>
+
+          <!-- Due time presets -->
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('return_time') }}</label>
+            <div class="flex gap-2 flex-wrap">
+              <button
+                v-for="t in timePresets"
+                :key="t"
+                type="button"
+                @click="dueTime = t"
+                class="rounded-lg px-3 py-1.5 text-sm font-medium border transition-colors"
+                :class="dueTime === t
+                  ? 'bg-primary-600 border-primary-600 text-white'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-primary-400'"
+              >
+                {{ t }}
+              </button>
+              <input
+                v-model="dueTime"
+                type="time"
+                class="input-field w-32 text-sm"
+                :disabled="submitting"
+              />
+            </div>
+          </div>
+
+          <!-- Confirm button -->
+          <button
+            @click="handleBorrowBatch"
+            class="w-full py-3 text-base font-semibold flex items-center justify-center gap-2 rounded-xl transition-colors btn-primary"
+            :disabled="submitting || !dueDate"
+          >
+            <span v-if="submitting" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ submitting ? '…' : `Laenuta ${cart.length} seade${cart.length === 1 ? '' : 't'}` }}
+          </button>
+        </div>
+      </Transition>
+    </template>
+
+    <!-- ====== RETURN MODE ====== -->
+    <template v-else>
+      <div class="card p-6 space-y-5">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ i18n.t('return_device') }}</h2>
+
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ i18n.t('enter_barcode') }}</label>
+          <div class="flex gap-2 items-stretch">
+            <input
+              v-model="identifier"
+              type="text"
+              class="input-field font-mono flex-1"
+              :placeholder="i18n.t('barcode_placeholder')"
+              :disabled="submitting"
+              @keydown.enter.prevent="handleReturn"
+            />
+            <BarcodeScanner v-if="isAdmin" @detected="identifier = $event" />
+          </div>
         </div>
 
-      </template>
-
-      <!-- Submit button -->
-      <button
-        @click="handleSubmit"
-        class="w-full py-3 text-base font-semibold flex items-center justify-center gap-2 rounded-xl transition-colors"
-        :class="mode === 'borrow' ? 'btn-primary' : 'btn-success'"
-        :disabled="submitting || !identifier || (mode === 'borrow' && !dueDate)"
-      >
-        <span v-if="submitting" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-        <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-        {{ submitting ? '…' : (mode === 'borrow' ? i18n.t('confirm_borrow') : i18n.t('confirm_return')) }}
-      </button>
-    </div>
+        <button
+          @click="handleReturn"
+          class="w-full py-3 text-base font-semibold flex items-center justify-center gap-2 rounded-xl transition-colors btn-success"
+          :disabled="submitting || !identifier"
+        >
+          <span v-if="submitting" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          {{ submitting ? '…' : i18n.t('confirm_return') }}
+        </button>
+      </div>
+    </template>
 
   </div>
 </template>
@@ -190,12 +275,15 @@ const isAdmin = computed(() => auth.isAdmin)
 
 const mode         = ref('borrow')
 const identifier   = ref('')
+const addError     = ref('')
+const cart         = ref([])
+
 const studentName  = ref('')
 const studentEmail = ref('')
 const dueDate      = ref('')
 const dueTime      = ref('08:30')
 const submitting   = ref(false)
-const feedback     = ref({ type: '', message: '', device: null })
+const feedback     = ref({ type: '', message: '', borrowed: null, errors: null })
 
 const students         = ref([])
 const showDropdown     = ref(false)
@@ -217,67 +305,100 @@ function setDefaultDueDate() {
 }
 
 function resetFeedback() {
-  feedback.value = { type: '', message: '', device: null }
+  feedback.value = { type: '', message: '', borrowed: null, errors: null }
+}
+
+function addToCart() {
+  addError.value = ''
+  const val = identifier.value.trim()
+  if (!val) return
+  if (cart.value.includes(val)) {
+    addError.value = 'See seade on juba korvis.'
+    return
+  }
+  cart.value.push(val)
+  identifier.value = ''
+  resetFeedback()
+}
+
+function removeFromCart(idx) {
+  cart.value.splice(idx, 1)
 }
 
 function onStudentNameInput() {
   selectedStudent.value = null
   const q = studentName.value.toLowerCase().trim()
-  if (q.length === 0) {
-    filteredStudents.value = students.value.slice(0, 8)
-  } else {
-    filteredStudents.value = students.value.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      s.email.toLowerCase().includes(q)
-    ).slice(0, 8)
-  }
+  filteredStudents.value = q.length === 0
+    ? students.value.slice(0, 8)
+    : students.value.filter(s =>
+        s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q)
+      ).slice(0, 8)
   showDropdown.value = true
 }
 
 function selectStudent(s) {
-  selectedStudent.value  = s
-  studentName.value  = s.name
-  studentEmail.value = s.email
-  showDropdown.value = false
+  selectedStudent.value = s
+  studentName.value     = s.name
+  studentEmail.value    = s.email
+  showDropdown.value    = false
 }
 
 function hideDropdownDelayed() {
   setTimeout(() => { showDropdown.value = false }, 150)
 }
 
-async function handleSubmit() {
+function resetCart() {
+  cart.value         = []
+  identifier.value   = ''
+  studentName.value  = ''
+  studentEmail.value = ''
+  selectedStudent.value = null
+  setDefaultDueDate()
+  dueTime.value = '08:30'
+}
+
+async function handleBorrowBatch() {
+  if (!dueDate.value) {
+    feedback.value = { type: 'error', message: 'Palun vali tagastamise kuupäev.' }
+    return
+  }
+  if (dueDate.value < minDate.value) {
+    feedback.value = { type: 'error', message: 'Tagastamise kuupäev peab olema vähemalt homme.' }
+    return
+  }
+  submitting.value = true
+  resetFeedback()
+  try {
+    const { data } = await borrowingsApi.borrowBatch({
+      identifiers:   cart.value,
+      due_date:      dueDate.value,
+      due_time:      dueTime.value,
+      student_name:  studentName.value || null,
+      student_email: studentEmail.value || null,
+    })
+    const hasErrors = data.errors && data.errors.length > 0
+    feedback.value = {
+      type:     hasErrors && data.borrowed.length === 0 ? 'error' : (hasErrors ? 'warning' : 'success'),
+      message:  data.message,
+      borrowed: data.borrowed,
+      errors:   data.errors,
+    }
+    if (data.borrowed.length > 0) resetCart()
+  } catch (e) {
+    feedback.value = { type: 'error', message: e.response?.data?.message || 'Midagi läks valesti.' }
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function handleReturn() {
   if (!identifier.value.trim()) return
   submitting.value = true
   resetFeedback()
   try {
-    if (mode.value === 'borrow') {
-      if (!dueDate.value) {
-        feedback.value = { type: 'error', message: 'Palun vali tagastamise kuupäev.' }
-        return
-      }
-      if (dueDate.value < minDate.value) {
-        feedback.value = { type: 'error', message: 'Tagastamise kuupäev peab olema vähemalt homme.' }
-        return
-      }
-      const { data } = await borrowingsApi.borrow({
-        identifier:    identifier.value.trim(),
-        due_date:      dueDate.value,
-        due_time:      dueTime.value,
-        student_name:  studentName.value || null,
-        student_email: studentEmail.value || null,
-      })
-      feedback.value   = { type: 'success', message: data.message, device: data.borrowing?.device }
-      identifier.value = ''
-      studentName.value  = ''
-      studentEmail.value = ''
-      selectedStudent.value = null
-      setDefaultDueDate()
-      dueTime.value = '08:30'
-    } else {
-      const { data } = await borrowingsApi.returnDevice({ identifier: identifier.value.trim() })
-      feedback.value   = { type: 'success', message: data.message, device: data.borrowing?.device }
-      identifier.value = ''
-    }
+    const { data } = await borrowingsApi.returnDevice({ identifier: identifier.value.trim() })
+    feedback.value   = { type: 'success', message: data.message, borrowed: null, errors: null }
+    identifier.value = ''
   } catch (e) {
     feedback.value = { type: 'error', message: e.response?.data?.message || 'Midagi läks valesti.' }
   } finally {
@@ -287,7 +408,10 @@ async function handleSubmit() {
 
 onMounted(async () => {
   setDefaultDueDate()
-  if (route.query.serial) identifier.value = route.query.serial
+  if (route.query.serial) {
+    identifier.value = route.query.serial
+    addToCart()
+  }
   if (route.query.mode === 'return') mode.value = 'return'
 
   if (auth.isAdmin) {

@@ -1,166 +1,168 @@
-# Equipment Borrowing System
+# Disainimajakas — Equipment Management System
 
-A school equipment inventory and borrowing system built with Laravel 11 (backend) and Vue 3 (frontend).
+A web application for managing and tracking equipment loans. Built with Laravel 11, Vue 3, Vite, and Tailwind CSS.
+
+---
+
+## Requirements
+
+| Software | Version |
+|----------|---------|
+| PHP | 8.2+ |
+| Composer | 2+ |
+| Node.js | 18+ |
+| npm | 9+ |
+| Git | any |
 
 ---
 
 ## Local Setup
 
-### Prerequisites
-
-**PHP 8.2+**
-```bash
-sudo apt update
-sudo apt install php8.2 php8.2-cli php8.2-mbstring php8.2-xml php8.2-curl php8.2-mysql php8.2-zip unzip -y
-php -v
-```
-
-**Composer**
-```bash
-curl -sS https://getcomposer.org/installer | php
-sudo mv composer.phar /usr/local/bin/composer
-composer -V
-```
-
-**MySQL**
-```bash
-sudo apt install mysql-server -y
-sudo systemctl start mysql
-sudo mysql_secure_installation
-```
-
-**Node.js 18+**
-```bash
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install nodejs -y
-node -v
-npm -v
-```
-
----
-
-### Step 1 — Clone the repository
+### 1. Clone the repository
 
 ```bash
-cd ~
 git clone https://github.com/D1ZEASE420/equipment.git
 cd equipment
 ```
 
 ---
 
-### Step 2 — Create the MySQL database
+### 2. Backend
 
 ```bash
-sudo mysql -u root -p
-```
-
-Inside the MySQL shell:
-```sql
-CREATE DATABASE equipment_system;
-EXIT;
-```
-
----
-
-### Step 3 — Set up the backend
-
-```bash
-cd ~/equipment/backend
-```
-
-Install PHP dependencies:
-```bash
+cd backend
 composer install
-```
-
-Create the environment file:
-```bash
 cp .env.example .env
-```
-
-Open `.env` and update the database credentials:
-```
-DB_DATABASE=equipment_system
-DB_USERNAME=root
-DB_PASSWORD=your_mysql_password
-```
-
-Generate the app key:
-```bash
 php artisan key:generate
 ```
 
-Run migrations and seed the database:
+Open `backend/.env` and set the database connection to SQLite:
+
+```env
+DB_CONNECTION=sqlite
+```
+
+Remove or comment out the MySQL lines:
+
+```env
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=equipment_system
+# DB_USERNAME=root
+# DB_PASSWORD=
+```
+
+Create the database file and run migrations with seed data:
+
 ```bash
+touch database/database.sqlite
 php artisan migrate --seed
 ```
 
-Set storage permissions:
-```bash
-chmod -R 775 storage bootstrap/cache
-```
+Start the development server:
 
-Start the backend server:
 ```bash
 php artisan serve
 ```
 
-Backend runs at **http://localhost:8000** — keep this terminal open.
+Backend runs at `http://localhost:8000`
 
 ---
 
-### Step 4 — Set up the frontend
+### 3. Frontend
 
-Open a **new terminal** and run:
+Open a new terminal:
 
 ```bash
-cd ~/equipment/frontend
-cp .env.example .env
+cd frontend
 npm install
+```
+
+Create the `.env` file:
+
+```bash
+echo "VITE_API_URL=http://localhost:8000/api" > .env
+```
+
+Start the development server:
+
+```bash
 npm run dev
 ```
 
-Frontend runs at **http://localhost:5173** — keep this terminal open too.
+Frontend runs at `http://localhost:5173`
 
 ---
 
-### Step 5 — Open in browser
-
-Go to **http://localhost:5173** and log in with the seeded accounts:
+## Default Login Credentials
 
 | Role | Email | Password |
-|---|---|---|
-| Admin | admin@school.edu | password |
-| Student | student@school.edu | password |
+|------|-------|----------|
+| Admin | `admin@school.edu` | `password` |
+| Student | `student@school.edu` | `password` |
+
+The seeder automatically adds 50+ devices (cameras, lenses, tripods, memory cards, etc.).
 
 ---
 
-## Running the project
+## Features
 
-You need **both servers running simultaneously** in separate terminals.
-
-| | Directory | Command | URL |
-|---|---|---|---|
-| Backend | `backend/` | `php artisan serve` | http://localhost:8000 |
-| Frontend | `frontend/` | `npm run dev` | http://localhost:5173 |
+- **Batch borrowing** — borrow multiple devices at once with a cart
+- **Return** — by barcode or serial number
+- **Email notifications** — overdue reminders sent to students (requires SMTP config)
+- **Admin panel** — add, edit, delete devices, CSV export
+- **Student management** — borrowing history and contact info
+- **Dashboard** — overview of active and overdue loans
+- **Bilingual** — Estonian / English toggle
+- **Dark / light mode**
 
 ---
 
-## Troubleshooting
+## Production Build
 
-**Class not found error**
 ```bash
-composer dump-autoload
+cd frontend
+npm run build
 ```
 
-**MySQL connection refused**
-```bash
-sudo systemctl start mysql
+Output goes to `frontend/dist/`.
+
+---
+
+## Email Notifications (optional)
+
+Fill in the SMTP settings in `backend/.env`:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=your@email.com
+MAIL_PASSWORD=yourpassword
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="noreply@disainimajakas.ee"
+MAIL_FROM_NAME="Disainimajakas"
 ```
 
-**Port 8000 already in use**
-```bash
-php artisan serve --port=8001
+---
+
+## Project Structure
+
 ```
-Then update `frontend/.env`: `VITE_API_URL=http://localhost:8001/api`
+equipment/
+├── backend/                        # Laravel 11 REST API
+│   ├── app/
+│   │   ├── Http/Controllers/Api/
+│   │   └── Models/
+│   ├── database/
+│   │   ├── migrations/
+│   │   └── seeders/
+│   └── routes/api.php
+└── frontend/                       # Vue 3 + Vite SPA
+    ├── public/                     # Favicon and static files
+    └── src/
+        ├── api/
+        ├── components/
+        ├── stores/
+        └── views/
+```

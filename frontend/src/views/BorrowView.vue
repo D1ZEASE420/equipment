@@ -37,7 +37,6 @@
         }"
       >
         <p class="font-semibold">{{ feedback.message }}</p>
-        <!-- Batch result details -->
         <div v-if="feedback.borrowed && feedback.borrowed.length" class="mt-2 space-y-1">
           <div v-for="b in feedback.borrowed" :key="b.id" class="flex items-center gap-2 text-sm">
             <svg class="h-4 w-4 shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -58,7 +57,7 @@
 
       <!-- Step 1: Add devices to cart -->
       <div class="card p-6 space-y-4">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white">1. Lisa seadmed</h2>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">1. {{ i18n.t('borrow_device') }}</h2>
 
         <!-- Barcode input + Add button -->
         <div>
@@ -72,25 +71,26 @@
               :disabled="submitting"
               @keydown.enter.prevent="addToCart"
             />
-            <BarcodeScanner v-if="isAdmin" @detected="identifier = $event; addToCart()" />
+            <BarcodeScanner v-if="isAdmin" @detected="val => { identifier = val; addToCart() }" />
             <button
               @click="addToCart"
-              class="btn-primary px-4 rounded-xl flex items-center gap-1.5 text-sm font-semibold shrink-0"
+              class="px-4 rounded-xl flex items-center gap-1.5 text-sm font-semibold shrink-0 transition-colors"
+              :class="identifier.trim() ? 'btn-primary' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'"
               :disabled="!identifier.trim() || submitting"
             >
               <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
               </svg>
-              Lisa
+              {{ i18n.t('add_to_cart') }}
             </button>
           </div>
           <p v-if="addError" class="mt-1.5 text-xs text-red-500">{{ addError }}</p>
         </div>
 
         <!-- Cart list -->
-        <div v-if="cart.length > 0" class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div v-if="cart.items.length > 0" class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div
-            v-for="(item, idx) in cart"
+            v-for="(item, idx) in cart.items"
             :key="item"
             class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 dark:border-gray-800 last:border-0 bg-white dark:bg-gray-900"
           >
@@ -100,9 +100,8 @@
             </svg>
             <span class="font-mono text-sm flex-1 text-gray-800 dark:text-gray-200">{{ item }}</span>
             <button
-              @click="removeFromCart(idx)"
+              @click="cart.remove(idx)"
               class="text-gray-300 hover:text-red-500 transition-colors p-0.5 rounded"
-              title="Eemalda"
             >
               <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -110,15 +109,15 @@
             </button>
           </div>
         </div>
-        <p v-else class="text-sm text-gray-400 text-center py-2">Korv on tühi — skanni või sisesta seadme vöökood/seerianumber</p>
+        <p v-else class="text-sm text-gray-400 text-center py-2">{{ i18n.t('cart_empty') }}</p>
 
-        <p v-if="cart.length > 0" class="text-xs text-gray-400">{{ cart.length }} seade{{ cart.length === 1 ? '' : 't' }} lisatud</p>
+        <p v-if="cart.items.length > 0" class="text-xs text-gray-400">{{ borrowBtnLabel }}</p>
       </div>
 
       <!-- Step 2: Student & date (only shown when cart has items) -->
       <Transition name="fade">
-        <div v-if="cart.length > 0" class="card p-6 space-y-5">
-          <h2 class="text-lg font-bold text-gray-900 dark:text-white">2. Laenutaja ja tähtaeg</h2>
+        <div v-if="cart.items.length > 0" class="card p-6 space-y-5">
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">2. {{ i18n.t('student_name') }} & {{ i18n.t('due_date') }}</h2>
 
           <!-- Student name autocomplete -->
           <div class="relative">
@@ -161,11 +160,12 @@
               :class="{ 'bg-gray-50 dark:bg-gray-800 opacity-75': selectedStudent }"
               placeholder="opilane@kool.ee"
               :disabled="submitting || !!selectedStudent"
-              :title="selectedStudent ? 'Email täidetud automaatselt. Muuda nime väljal et tühjendada.' : ''"
             />
             <p v-if="selectedStudent" class="mt-1 text-xs text-gray-400">
-              Täidetud automaatselt ·
-              <button type="button" class="underline hover:text-gray-600" @click="selectedStudent = null; studentEmail = ''">muuda</button>
+              {{ i18n.isEstonian ? 'Täidetud automaatselt' : 'Auto-filled' }} ·
+              <button type="button" class="underline hover:text-gray-600" @click="selectedStudent = null; studentEmail = ''">
+                {{ i18n.t('edit') }}
+              </button>
             </p>
           </div>
 
@@ -216,7 +216,7 @@
             <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
-            {{ submitting ? '…' : `Laenuta ${cart.length} seade${cart.length === 1 ? '' : 't'}` }}
+            {{ submitting ? '…' : borrowBtnLabel }}
           </button>
         </div>
       </Transition>
@@ -261,22 +261,24 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { useAuthStore } from '@/stores/auth'
+import { useCartStore } from '@/stores/cart'
 import { borrowingsApi } from '@/api/borrowings'
 import { studentsApi } from '@/api/students'
 import BarcodeScanner from '@/components/BarcodeScanner.vue'
 
 const route   = useRoute()
+const router  = useRouter()
 const i18n    = useI18nStore()
 const auth    = useAuthStore()
+const cart    = useCartStore()
 const isAdmin = computed(() => auth.isAdmin)
 
 const mode         = ref('borrow')
 const identifier   = ref('')
 const addError     = ref('')
-const cart         = ref([])
 
 const studentName  = ref('')
 const studentEmail = ref('')
@@ -298,6 +300,12 @@ const minDate = computed(() => {
   return d.toISOString().split('T')[0]
 })
 
+const borrowBtnLabel = computed(() => {
+  const n = cart.items.length
+  if (i18n.isEstonian) return n === 1 ? 'Laenuta 1 seade' : `Laenuta ${n} seadet`
+  return n === 1 ? 'Borrow 1 device' : `Borrow ${n} devices`
+})
+
 function setDefaultDueDate() {
   const d = new Date()
   d.setDate(d.getDate() + 7)
@@ -312,17 +320,17 @@ function addToCart() {
   addError.value = ''
   const val = identifier.value.trim()
   if (!val) return
-  if (cart.value.includes(val)) {
-    addError.value = 'See seade on juba korvis.'
+  const added = cart.add(val)
+  if (!added) {
+    addError.value = i18n.t('cart_duplicate')
     return
   }
-  cart.value.push(val)
   identifier.value = ''
   resetFeedback()
-}
-
-function removeFromCart(idx) {
-  cart.value.splice(idx, 1)
+  // Go back to devices so user can pick the next one
+  if (route.query.serial) {
+    router.push({ path: '/devices' })
+  }
 }
 
 function onStudentNameInput() {
@@ -347,11 +355,11 @@ function hideDropdownDelayed() {
   setTimeout(() => { showDropdown.value = false }, 150)
 }
 
-function resetCart() {
-  cart.value         = []
-  identifier.value   = ''
-  studentName.value  = ''
-  studentEmail.value = ''
+function resetForm() {
+  cart.clear()
+  identifier.value      = ''
+  studentName.value     = ''
+  studentEmail.value    = ''
   selectedStudent.value = null
   setDefaultDueDate()
   dueTime.value = '08:30'
@@ -359,18 +367,18 @@ function resetCart() {
 
 async function handleBorrowBatch() {
   if (!dueDate.value) {
-    feedback.value = { type: 'error', message: 'Palun vali tagastamise kuupäev.' }
+    feedback.value = { type: 'error', message: i18n.isEstonian ? 'Palun vali tagastamise kuupäev.' : 'Please select a return date.' }
     return
   }
   if (dueDate.value < minDate.value) {
-    feedback.value = { type: 'error', message: 'Tagastamise kuupäev peab olema vähemalt homme.' }
+    feedback.value = { type: 'error', message: i18n.isEstonian ? 'Tagastamise kuupäev peab olema vähemalt homme.' : 'Return date must be at least tomorrow.' }
     return
   }
   submitting.value = true
   resetFeedback()
   try {
     const { data } = await borrowingsApi.borrowBatch({
-      identifiers:   cart.value,
+      identifiers:   cart.items,
       due_date:      dueDate.value,
       due_time:      dueTime.value,
       student_name:  studentName.value || null,
@@ -383,7 +391,7 @@ async function handleBorrowBatch() {
       borrowed: data.borrowed,
       errors:   data.errors,
     }
-    if (data.borrowed.length > 0) resetCart()
+    if (data.borrowed.length > 0) resetForm()
   } catch (e) {
     feedback.value = { type: 'error', message: e.response?.data?.message || 'Midagi läks valesti.' }
   } finally {
@@ -408,11 +416,13 @@ async function handleReturn() {
 
 onMounted(async () => {
   setDefaultDueDate()
-  if (route.query.serial) {
-    identifier.value = route.query.serial
-    addToCart()
-  }
   if (route.query.mode === 'return') mode.value = 'return'
+  if (route.query.serial) {
+    const serial = route.query.serial
+    if (!cart.items.includes(serial)) {
+      cart.add(serial)
+    }
+  }
 
   if (auth.isAdmin) {
     try {

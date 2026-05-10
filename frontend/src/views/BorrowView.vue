@@ -75,8 +75,8 @@
             <button
               @click="addToCart"
               class="px-4 rounded-xl flex items-center gap-1.5 text-sm font-semibold shrink-0 transition-colors"
-              :class="identifier.trim() ? 'btn-primary' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'"
-              :disabled="!identifier.trim() || submitting"
+              :class="(identifier.trim() || cart.items.length > 0) ? 'btn-primary' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'"
+              :disabled="(!identifier.trim() && cart.items.length === 0) || submitting"
             >
               <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
@@ -319,7 +319,10 @@ function resetFeedback() {
 function addToCart() {
   addError.value = ''
   const val = identifier.value.trim()
-  if (!val) return
+  if (!val) {
+    if (cart.items.length > 0) router.push({ path: '/devices' })
+    return
+  }
   const added = cart.add(val)
   if (!added) {
     addError.value = i18n.t('cart_duplicate')
@@ -327,7 +330,6 @@ function addToCart() {
   }
   identifier.value = ''
   resetFeedback()
-  // Go back to devices so user can pick the next one
   if (route.query.serial) {
     router.push({ path: '/devices' })
   }

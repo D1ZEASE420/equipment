@@ -163,15 +163,18 @@
               v-if="device.loanable"
               @click="handleAction(device)"
               class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
-              :class="device.status === 'available'
-                ? 'bg-primary-600 text-white hover:bg-primary-700'
-                : device.borrowing?.status_color === 'red'
-                  ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400'
-                  : device.borrowing?.status_color === 'yellow'
-                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
-                    : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400'"
+              :class="inCart(device)
+                ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400'
+                : device.status === 'available'
+                  ? 'bg-primary-600 text-white hover:bg-primary-700'
+                  : device.borrowing?.status_color === 'red'
+                    ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400'
+                    : device.borrowing?.status_color === 'yellow'
+                      ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
+                      : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400'"
             >
-              {{ device.status === 'available' ? i18n.t('borrow') : i18n.t('return') }}
+              <span v-if="inCart(device)">✓ {{ i18n.isEstonian ? 'Lisatud' : 'In cart' }}</span>
+              <span v-else>{{ device.status === 'available' ? i18n.t('borrow') : i18n.t('return') }}</span>
             </button>
             <span v-else class="text-xs text-gray-400 italic">{{ i18n.t('not_for_loan') }}</span>
           </div>
@@ -206,6 +209,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/i18n'
 import { useAuthStore } from '@/stores/auth'
+import { useCartStore } from '@/stores/cart'
 import { devicesApi } from '@/api/devices'
 import { borrowingsApi } from '@/api/borrowings'
 
@@ -213,7 +217,12 @@ const router   = useRouter()
 const route    = useRoute()
 const i18n     = useI18nStore()
 const auth     = useAuthStore()
+const cart     = useCartStore()
 const isAdmin  = computed(() => auth.isAdmin)
+
+function inCart(device) {
+  return cart.items.includes(device.serial_number) || cart.items.includes(device.barcode)
+}
 
 const loading             = ref(true)
 const devices             = ref([])

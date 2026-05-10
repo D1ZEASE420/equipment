@@ -6,17 +6,19 @@ export const borrowingsApi = {
   },
 
   borrow(data) {
-    // data: { identifier, due_date, due_time, student_name, student_email }
     return api.post('/borrow', data)
   },
 
+  borrowBatch(data) {
+    // data: { identifiers[], due_date, due_time, student_name, student_email }
+    return api.post('/borrow-batch', data)
+  },
+
   returnDevice(data) {
-    // data: { identifier }
     return api.post('/return', data)
   },
 
   updateDueDate(id, data) {
-    // data: { due_date, due_time }
     return api.patch(`/borrowings/${id}/due-date`, data)
   },
 

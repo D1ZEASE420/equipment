@@ -178,7 +178,7 @@ const allNavItems = computed(() => [
   { to: '/dashboard',  label: i18n.t('nav_dashboard'), icon: IconDashboard, admin: false },
   { to: '/devices',    label: i18n.t('nav_devices'),   icon: IconDevices,   admin: false },
   { to: '/borrow',     label: i18n.t('nav_borrow'),    icon: IconBarcode,   admin: true  },
-  { to: '/borrowings', label: i18n.t('nav_borrowings'),icon: IconList,      admin: false },
+  { to: '/borrowings', label: i18n.t('nav_borrowings'),icon: IconList,      admin: true  },
   { to: '/students',   label: i18n.t('nav_students'),  icon: IconStudents,  admin: true  },
   { to: '/admin',      label: i18n.t('nav_admin'),     icon: IconAdmin,     admin: true  },
 ])

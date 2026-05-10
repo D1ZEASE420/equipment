@@ -28,7 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Borrowings
     Route::get('/borrowings', [BorrowingController::class, 'index']);
-    Route::post('/borrow',    [BorrowingController::class, 'borrow']);
+    Route::post('/borrow',       [BorrowingController::class, 'borrow']);
+    Route::post('/borrow-batch', [BorrowingController::class, 'borrowBatch']);
     Route::post('/return',    [BorrowingController::class, 'returnDevice']);
 
     // Admin-only routes
